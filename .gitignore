@@ -41,6 +41,14 @@
 # Text editor remnants
 *.swp
 .vscode/*
+.qtc_clangd/*
+*.cflags
+*.config
+*.creator
+*.creator.user
+*.cxxflags
+*.files
+*.includes
 
 # General project-specific ignores
 doxygen/doxygen/*

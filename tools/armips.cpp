@@ -13547,7 +13547,7 @@ bool FileTokenizer::init(TextFile* input)
 				addSeparator = false;
 			} else if(linePos < currentLine.size())
 			{
-				addToken(std::move(loadToken()));
+                addToken(loadToken());
 			}
 
 			if (linePos >= currentLine.size())
