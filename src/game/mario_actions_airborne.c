@@ -644,6 +644,10 @@ s32 act_long_jump(struct MarioState *m) {
         m->actionState = 1;
     }
 
+    if (m->input & INPUT_Z_PRESSED) {
+        return set_mario_action(m, ACT_GROUND_POUND, 0);
+    }
+
     common_air_action_step(m, ACT_LONG_JUMP_LAND, animation, AIR_STEP_CHECK_LEDGE_GRAB);
 #if ENABLE_RUMBLE
     if (m->action == ACT_LONG_JUMP_LAND) {
