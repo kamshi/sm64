@@ -6107,4 +6107,15 @@ const BehaviorScript bhvIntroScene[] = {
     END_LOOP(),
 };
 
-
+/* custom */
+const BehaviorScript bhvNUp[] = {
+    BEGIN(OBJ_LIST_GENACTOR), /* specify type of actor */
+    OR_INT(oFlags, OBJ_FLAG_UPDATE_GFX_POS_AND_ANGLE), /* add flags to update position and angle */
+    BILLBOARD(), /* always face Mario */
+    SET_HITBOX_WITH_OFFSET(30, 30, 0), /* radius, height, downwards offset */
+    SET_FLOAT(oGraphYOffset, 30), /* graphic offset by 30 upwards */
+    BEGIN_LOOP(),
+        SET_INT(oIntangibleTimer, 0), /* object can be interacted with */
+        CALL_NATIVE(bhv_nup_loop), /* call behavior function */
+    END_LOOP(),
+};
