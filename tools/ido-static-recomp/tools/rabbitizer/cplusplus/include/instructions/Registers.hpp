@@ -49,7 +49,7 @@ namespace rabbitizer {
             enum class Cop2 {
                 #include "instructions/registers/RabbitizerRegister_Cop2.inc"
             };
-        };
+        }
 
 
         namespace Rsp {
@@ -72,7 +72,7 @@ namespace rabbitizer {
             enum class Vector {
                 #include "instructions/registers/RabbitizerRegister_RspVector.inc"
             };
-        };
+        }
 
 
         namespace R5900 {
@@ -83,12 +83,12 @@ namespace rabbitizer {
             enum class VI {
                 #include "instructions/registers/RabbitizerRegister_R5900VI.inc"
             };
-        };
+        }
 
     #undef RABBITIZER_DEF_REG
     #undef RABBITIZER_DEF_REG_NODOLLAR
-    };
-};
+    }
+}
 
 
 #endif

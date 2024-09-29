@@ -14,7 +14,7 @@ namespace rabbitizer {
         InstructionCpu(uint32_t word, uint32_t vram);
         virtual ~InstructionCpu();
     };
-};
+}
 
 
 #endif

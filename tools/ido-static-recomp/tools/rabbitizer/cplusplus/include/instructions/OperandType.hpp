@@ -21,7 +21,7 @@ namespace rabbitizer {
     };
 
     #undef RAB_DEF_OPERAND
-};
+}
 
 
 #endif

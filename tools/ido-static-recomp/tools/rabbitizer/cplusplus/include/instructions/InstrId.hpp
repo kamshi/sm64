@@ -31,8 +31,8 @@ namespace rabbitizer {
 
 
         std::string getOpcodeName(UniqueId uniqueId);
-    };
-};
+    }
+}
 
 
 #endif

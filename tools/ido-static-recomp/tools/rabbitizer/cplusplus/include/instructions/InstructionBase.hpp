@@ -248,6 +248,6 @@ namespace rabbitizer {
 
         /* Disassembly */
     };
-};
+}
 
 #endif

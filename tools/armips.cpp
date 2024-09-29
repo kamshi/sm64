@@ -1224,7 +1224,7 @@ enum class ExpressionValueType { Invalid, Integer, Float, String};
 
 struct ExpressionValue
 {
-	ExpressionValueType type;
+	ExpressionValueType type = ExpressionValueType::Invalid;
 
 	ExpressionValue()
 	{
@@ -1271,8 +1271,8 @@ struct ExpressionValue
 
 	struct
 	{
-		int64_t intValue;
-		double floatValue;
+		int64_t intValue = 0;
+		double floatValue = 0.0;
 	};
 
 	std::wstring strValue;
@@ -1569,7 +1569,7 @@ typedef std::vector<std::wstring> StringList;
 
 std::wstring convertUtf8ToWString(const char* source);
 std::string convertWCharToUtf8(wchar_t character);
-;std::string convertWStringToUtf8(const std::wstring& source);
+std::string convertWStringToUtf8(const std::wstring& source);
 
 std::wstring intToHexString(unsigned int value, int digits, bool prefix = false);
 std::wstring intToString(unsigned int value, int digits);
@@ -1584,7 +1584,7 @@ StringList splitString(const std::wstring& str, const wchar_t delim, bool skipEm
 int64_t fileSize(const std::wstring& fileName);
 bool fileExists(const std::wstring& strFilename);
 bool copyFile(const std::wstring& existingFile, const std::wstring& newFile);
-bool deleteFile(const std::wstring& fileName);;
+bool deleteFile(const std::wstring& fileName);
 
 std::wstring toWLowercase(const std::string& str);
 std::wstring getFileNameFromPath(const std::wstring& path);
@@ -9610,7 +9610,7 @@ void CDirectiveConditional::setContent(std::unique_ptr<CAssemblerCommand> ifBloc
 
 bool CDirectiveConditional::evaluate()
 {
-	int64_t value;
+	int64_t value = 0;
 	if (expression.isLoaded())
 	{
 		if (expression.evaluateInteger(value) == false)
@@ -11035,7 +11035,7 @@ std::unique_ptr<CAssemblerCommand> parseDirectiveObjImport(Parser& parser, int f
 
 std::unique_ptr<CAssemblerCommand> parseDirectiveConditional(Parser& parser, int flags)
 {
-	ConditionType type;
+	ConditionType type = ConditionType::IF;
 	std::wstring name;
 	Expression exp;
 
@@ -14975,7 +14975,7 @@ void TextFile::bufFillRead()
 
 wchar_t TextFile::readCharacter()
 {
-	wchar_t value;
+	wchar_t value = L'\0';
 
 	switch (encoding)
 	{
@@ -16493,7 +16493,7 @@ std::vector<ArFileEntry> loadArArchive(const std::wstring& inputName)
 					if (i > 0 && fileName[i-1] == '/')
 						i--;
 					fileName[i] = 0;
-					break;;
+					break;
 				}
 
 				fileName[i] = header->fileName[i];
@@ -19903,4 +19903,3 @@ int main(int argc, char* argv[])
 }
 
 #endif
-

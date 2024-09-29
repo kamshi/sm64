@@ -35,7 +35,7 @@ namespace rabbitizer {
 
         uint8_t GetR5900_imm5() const;
     };
-};
+}
 
 
 #endif

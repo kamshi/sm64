@@ -34,7 +34,7 @@ namespace rabbitizer {
         uint8_t GetRsp_index() const;
         uint8_t GetRsp_de() const;
     };
-};
+}
 
 
 #endif
