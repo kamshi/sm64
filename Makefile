@@ -23,7 +23,7 @@ TARGET_N64 ?= 1
 #   ido - uses the SGI IRIS Development Option compiler, which is used to build
 #         an original matching N64 ROM
 #   gcc - uses the GNU C Compiler
-COMPILER ?= ido
+COMPILER ?= gcc
 $(eval $(call validate-option,COMPILER,ido gcc))
 
 
@@ -135,7 +135,7 @@ endif
 # COMPARE - whether to verify the SHA-1 hash of the ROM after building
 #   1 - verifies the SHA-1 hash of the selected version of the game
 #   0 - does not verify the hash
-COMPARE ?= 1
+COMPARE ?= 0
 $(eval $(call validate-option,COMPARE,0 1))
 
 TARGET_STRING := sm64.$(VERSION).$(GRUCODE)
@@ -307,13 +307,13 @@ IQUE_EGCS_PATH := $(TOOLS_DIR)/ique_egcs
 IQUE_LD_PATH := $(TOOLS_DIR)/ique_ld
 
 # detect prefix for MIPS toolchain
-ifneq      ($(call find-command,mips-linux-gnu-ld),)
+ifneq      ($(call find-command,mips-linux-gnu-gcc),)
   CROSS := mips-linux-gnu-
-else ifneq ($(call find-command,mips64-linux-gnu-ld),)
+else ifneq ($(call find-command,mips64-linux-gnu-gcc),)
   CROSS := mips64-linux-gnu-
-else ifneq ($(call find-command,mips64-elf-ld),)
+else ifneq ($(call find-command,mips64-elf-gcc),)
   CROSS := mips64-elf-
-else ifneq ($(call find-command,mips-elf-ld),)
+else ifneq ($(call find-command,mips-elf-gcc),)
   CROSS := mips-elf-
 else
   $(error Unable to detect a suitable MIPS toolchain installed)
