@@ -385,6 +385,9 @@ ifeq ($(VERSION),cn)
   $(IQUE_RECOMPILED): CFLAGS = $(IQUE_CFLAGS)
 endif
 
+$(info    CC is $(CC))
+$(info    LD is $(LD))
+
 # Prefer clang as C preprocessor if installed on the system
 ifneq (,$(call find-command,clang))
   CPP      := clang
