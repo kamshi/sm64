@@ -1904,7 +1904,7 @@ void d_set_att_offset(const struct GdVec3f *off) {
  * @note Not called
  */
 // TODO: remove?
-#if __GNUC__ > 9
+#if __GNUC__ > 11
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winfinite-recursion"
 #endif
@@ -1940,7 +1940,7 @@ void d_set_att_to_offset(UNUSED u32 a) {
     d_set_att_to_offset(a);
     d_unstash_dynobj();
 }
-#if __GNUC__ > 9
+#if __GNUC__ > 11
 #pragma GCC diagnostic pop
 #endif
 
