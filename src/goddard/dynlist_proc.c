@@ -1904,8 +1904,10 @@ void d_set_att_offset(const struct GdVec3f *off) {
  * @note Not called
  */
 // TODO: remove?
+#if __GNUC__ > 8
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Winfinite-recursion"
+#endif
 void d_set_att_to_offset(UNUSED u32 a) {
     struct GdObj *dynobj; // sp3c
     UNUSED u8 filler[24];
@@ -1938,7 +1940,9 @@ void d_set_att_to_offset(UNUSED u32 a) {
     d_set_att_to_offset(a);
     d_unstash_dynobj();
 }
+#if __GNUC__ > 8
 #pragma GCC diagnostic pop
+#endif
 
 /**
  * Store the offset of the attached object into `dst`.
