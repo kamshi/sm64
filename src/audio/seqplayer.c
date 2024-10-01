@@ -470,7 +470,7 @@ void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
     struct Drum *drum;
     s32 temp_a0_5;
 #ifdef VERSION_EU
-    u16 sp3A;
+    u16 sp3A = 0;
     s32 sameSound;
 #endif
     UNUSED u32 pad1;
@@ -483,7 +483,7 @@ void seq_channel_layer_process_script(struct SequenceChannelLayer *layer) {
     u16 sp3A;
 #endif
     f32 tuning;
-    s32 vel;
+    s32 vel = 0;
     UNUSED s32 usedSemitone;
     f32 freqScale;
 #ifndef VERSION_EU
@@ -1700,8 +1700,8 @@ void sequence_channel_process_script(struct SequenceChannel *seqChannel) {
                         } else {
                             eu_stubbed_printf_1("SUB:ERR:BANK %d NOT CACHED.\n", cmd);
                         }
-                        // fallthrough
 #endif
+                        /* fall through */
 
                     case 0xc1: // chan_setinstr ("set program"?)
                         set_instrument(seqChannel, m64_read_u8(state));

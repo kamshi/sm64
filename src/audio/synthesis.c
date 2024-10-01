@@ -271,7 +271,7 @@ u64 *synthesis_execute(u64 *cmdBuf, s32 *writtenCmds, s16 *aiBuf, s32 bufLen) {
     u32 *aiBufPtr;
     u64 *cmd = cmdBuf;
     s32 chunkLen;
-    s32 nextVolRampTable;
+    s32 nextVolRampTable = 0;
 
     for (i = gAudioBufferParameters.updatesPerFrame; i > 0; i--) {
         process_sequences(i - 1);
@@ -606,7 +606,7 @@ u64 *synthesis_process_notes(s16 *aiBuf, s32 bufLen, u64 *cmd) {
     UNUSED u8 pad7[0x0c];                    // sp100
     UNUSED s32 tempBufLen;
 #ifdef VERSION_EU
-    s32 sp130;  //sp128, sp104
+    s32 sp130 = 0;  //sp128, sp104
     UNUSED u32 pad9;
 #else
     UNUSED u32 pad9;

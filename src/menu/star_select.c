@@ -267,9 +267,9 @@ void print_act_selector_strings(void) {
     unsigned char starNumbers[] = { TEXT_ZERO };
 
 #ifdef VERSION_EU
-    u8 **levelNameTbl;
+    u8 **levelNameTbl = 0;
     u8 *currLevelName;
-    u8 **actNameTbl;
+    u8 **actNameTbl = 0;
 #else
     u8 **levelNameTbl = segmented_to_virtual(seg2_course_name_table);
     u8 *currLevelName = segmented_to_virtual(levelNameTbl[COURSE_NUM_TO_INDEX(gCurrCourseNum)]);

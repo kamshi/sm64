@@ -945,7 +945,12 @@ void audio_init() {
     // It seems boot.s doesn't clear the .bss area for audio, so do it here.
     i = 0;
     lim3 = ((uintptr_t) &gAudioGlobalsEndMarker - (uintptr_t) &gAudioGlobalsStartMarker) / 8;
+
+    // TODO: array subscript out of bounds
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Warray-bounds"
     ptr64 = &gAudioGlobalsStartMarker - 1;
+    #pragma GCC diagnostic pop
     for (k = lim3; k >= 0; k--) {
         i++;
         ptr64[i] = 0;
