@@ -1,5 +1,7 @@
 // Haunted Cage
 
+#include "macros.h"
+
 // 0x0500C258
 static const Lights1 haunted_cage_seg5_lights_0500C258 = gdSPDefLights1(
     0x39, 0x0c, 0x0e,
@@ -41,7 +43,7 @@ ALIGNED8 static const Texture haunted_cage_seg5_texture_0500DA88[] = {
 // also could be some sort of shader mask from much earlier in development, considering
 // Big Boo's Haunt was a very very early level.
 // 0x0500E288
-ALIGNED8 static const Texture haunted_cage_seg5_texture_0500E288[] = {
+UNUSED ALIGNED8 static const Texture haunted_cage_seg5_texture_0500E288[] = {
 #include "actors/haunted_cage/bbh_cage_garbage.rgba16.inc.c"
 };
 

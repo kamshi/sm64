@@ -190,6 +190,8 @@ s8 get_vibrato_pitch_change(struct VibratoState *vib) {
     switch (index & 0x30) {
         case 0x10:
             index = 31 - index;
+            // TODO: intentional fall-through?
+            /* fall through */
 
         case 0x00:
             return vib->curve[index];
@@ -385,8 +387,8 @@ s32 adsr_update(struct AdsrState *adsr) {
                 adsr->state = ADSR_STATE_HANG;
                 break;
             }
-            // fallthrough
         }
+            /* fall through */
 
         case ADSR_STATE_START_LOOP:
             adsr->envIndex = 0;
@@ -394,11 +396,11 @@ s32 adsr_update(struct AdsrState *adsr) {
             adsr->currentHiRes = adsr->current << 0x10;
 #endif
             adsr->state = ADSR_STATE_LOOP;
-            // fallthrough
 
 #if defined(VERSION_SH) || defined(VERSION_CN)
             restart:
 #endif
+            /* fall through */
         case ADSR_STATE_LOOP:
             adsr->delay = BSWAP16(adsr->envelope[adsr->envIndex].delay);
             switch (adsr->delay) {

@@ -584,7 +584,7 @@ u32 get_area_terrain_size(TerrainData *data) {
  */
 void load_area_terrain(s16 index, TerrainData *data, RoomData *surfaceRooms, s16 *macroObjects) {
     TerrainData terrainLoadType;
-    TerrainData *vertexData;
+    TerrainData *vertexData = 0;
     UNUSED u8 filler[4];
 
     // Initialize the data for this.

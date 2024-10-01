@@ -1,5 +1,7 @@
 // Mario
 
+#include "macros.h"
+
 // 0x04000000 # solid color blue - butt, left thigh, right thigh - all poly types
 static const Lights1 mario_blue_lights_group = gdSPDefLights1(
     0x00, 0x00, 0x7f,
@@ -78,13 +80,13 @@ ALIGNED8 static const Texture mario_texture_eyes_closed[] = {
 
 // Unreferenced
 // 0x04004890
-ALIGNED8 static const Texture mario_texture_eyes_closed_unused1[] = {
+UNUSED ALIGNED8 static const Texture mario_texture_eyes_closed_unused1[] = {
 #include "actors/mario/mario_eyes_closed_unused_0.rgba16.inc.c"
 };
 
 // Unreferenced
 // 0x04005090
-ALIGNED8 static const Texture mario_texture_eyes_closed_unused2[] = {
+UNUSED ALIGNED8 static const Texture mario_texture_eyes_closed_unused2[] = {
 #include "actors/mario/mario_eyes_closed_unused_1.rgba16.inc.c"
 };
 

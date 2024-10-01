@@ -161,6 +161,8 @@ void bhv_unagi_loop(void) {
             break;
         case 2:
             unagi_act_2();
+            // TODO: intentional fall-through?
+            /* fall through */
         case 3:
             unagi_act_3();
             break;

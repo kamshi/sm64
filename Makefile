@@ -23,7 +23,7 @@ TARGET_N64 ?= 1
 #   ido - uses the SGI IRIS Development Option compiler, which is used to build
 #         an original matching N64 ROM
 #   gcc - uses the GNU C Compiler
-COMPILER ?= ido
+COMPILER ?= gcc
 $(eval $(call validate-option,COMPILER,ido gcc))
 
 
@@ -33,7 +33,7 @@ $(eval $(call validate-option,COMPILER,ido gcc))
 #   eu - builds the 1997 PAL version
 #   sh - builds the 1997 Japanese Shindou version, with rumble pak support
 #   cn - builds the 2003 Chinese iQue version
-VERSION ?= us
+VERSION ?= jp
 $(eval $(call validate-option,VERSION,jp us eu sh cn))
 
 ifeq      ($(VERSION),jp)
@@ -403,6 +403,8 @@ ifeq ($(COMPILER),gcc)
 else
   CFLAGS += -non_shared -Wab,-r4300_mul -Xcpluscomm -Xfullwarn -signed -32
 endif
+CFLAGS += -Wall -Werror
+CPPFLAGS += -Wall -Werror
 
 ASFLAGS   := -march=vr4300 -mabi=32 $(foreach i,$(INCLUDE_DIRS),-I$(i)) $(foreach d,$(DEFINES),--defsym $(d))
 RSPASMFLAGS := $(foreach d,$(DEFINES),-definelabel $(subst =, ,$(d)))

@@ -63,9 +63,13 @@ s32 osEepromWrite(OSMesgQueue *mq, u8 address, u8 *buffer) {
     ret = __osSiRawStartDma(OS_WRITE, &__osEepPifRam);
     osRecvMesg(mq, NULL, OS_MESG_BLOCK);
 
+    // TODO: index out of bounds!
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
     for (i = 0; i < ARRAY_COUNT(__osEepPifRam.ramarray) + 1; i++) {
         __osEepPifRam.ramarray[i] = CONT_CMD_NOP;
     }
+    #pragma GCC diagnostic pop
 
     __osEepPifRam.pifstatus = 0;
     ret = __osSiRawStartDma(OS_READ, &__osEepPifRam);
@@ -87,9 +91,13 @@ void __osPackEepWriteData(u8 address, u8 *buffer) {
     __OSContEepromFormat eepromformat;
     s32 i;
 
+    // TODO: index out of bounds!
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
     for (i = 0; i < ARRAY_COUNT(__osEepPifRam.ramarray) + 1; i++) {
         __osEepPifRam.ramarray[i] = CONT_CMD_NOP;
     }
+    #pragma GCC diagnostic pop
     __osEepPifRam.pifstatus = CONT_CMD_EXE;
 
     eepromformat.txsize = CONT_CMD_WRITE_EEPROM_TX;
@@ -115,9 +123,13 @@ s32 __osEepStatus(OSMesgQueue *mq, OSContStatus *data) {
     u8 *ptr = (u8 *) __osEepPifRam.ramarray;
     __OSContRequesFormat requestformat;
 
+    // TODO: index out of bounds!
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
     for (i = 0; i < ARRAY_COUNT(__osEepPifRam.ramarray) + 1; i++) {
         __osEepPifRam.ramarray[i] = 0;
     }
+    #pragma GCC diagnostic pop
     __osEepPifRam.pifstatus = CONT_CMD_EXE;
 
     ptr = (u8 *) __osEepPifRam.ramarray;

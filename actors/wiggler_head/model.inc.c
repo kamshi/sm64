@@ -1,5 +1,7 @@
 // Wiggler Head
 
+#include "macros.h"
+
 // 0x0500C878
 static const Lights1 wiggler_seg5_lights_0500C878 = gdSPDefLights1(
     0x37, 0x00, 0x00,
@@ -237,7 +239,7 @@ static const Vtx wiggler_seg5_vertex_0500D228[] = {
 };
 
 // Unused vertices? what are these? [D318]
-static const Vtx wiggler_seg5_vertex_0500D318[] = {
+UNUSED static const Vtx wiggler_seg5_vertex_0500D318[] = {
     {{{    92,     51,      0}, 0, {     0,      0}, {0x5d, 0x55, 0x00, 0x00}}},
     {{{    87,     46,    -28}, 0, {     0,      0}, {0x5a, 0x53, 0xe1, 0x00}}},
     {{{    49,     88,    -28}, 0, {     0,      0}, {0x5a, 0x53, 0xe1, 0x00}}},

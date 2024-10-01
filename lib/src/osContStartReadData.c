@@ -24,12 +24,16 @@ s32 osContStartReadData(OSMesgQueue *mesg) {
         ret = __osSiRawStartDma(OS_WRITE, __osContPifRam.ramarray);
         osRecvMesg(mesg, NULL, OS_MESG_BLOCK);
     }
+    // TODO: index out of bounds!
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 #ifndef VERSION_CN
     for (i = 0; i < ARRAY_COUNT(__osContPifRam.ramarray) + 1; i++) {
         __osContPifRam.ramarray[i] = 0xff;
     }
     __osContPifRam.pifstatus = 0;
 #endif
+    #pragma GCC diagnostic pop
 
     ret = __osSiRawStartDma(OS_READ, __osContPifRam.ramarray);
 #ifdef VERSION_CN
@@ -72,6 +76,9 @@ void __osPackReadData() {
     s32 i;
     cmdBufPtr = (u8 *) __osContPifRam.ramarray;
 
+    // TODO: index out of bounds!
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 #ifdef VERSION_CN
     for (i = 0; i < ARRAY_COUNT(__osContPifRam.ramarray); i++) {
 #else
@@ -79,6 +86,7 @@ void __osPackReadData() {
 #endif
         __osContPifRam.ramarray[i] = 0;
     }
+    #pragma GCC diagnostic pop
 
     __osContPifRam.pifstatus = 1;
     request.padOrEnd = 255;

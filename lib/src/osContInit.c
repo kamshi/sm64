@@ -104,6 +104,9 @@ void __osPackRequestData(u8 command) {
     OSContPackedRequest request;
     s32 i;
 
+    // TODO: index out of bounds!
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
 #ifdef VERSION_CN
     for (i = 0; i < ARRAY_COUNT(__osContPifRam.ramarray); i++) {
 #else
@@ -111,6 +114,7 @@ void __osPackRequestData(u8 command) {
 #endif
         __osContPifRam.ramarray[i] = 0;
     }
+    #pragma GCC diagnostic pop
 
     __osContPifRam.pifstatus = 1;
     cmdBufPtr = (u8 *) __osContPifRam.ramarray;

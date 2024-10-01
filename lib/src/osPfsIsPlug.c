@@ -53,9 +53,13 @@ void __osPfsRequestData(u8 cmd) {
 
     __osContLastCmd = cmd;
 
+    // TODO: index out of bounds!
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Waggressive-loop-optimizations"
     for (i = 0; i < ARRAY_COUNT(__osPfsPifRam.ramarray) + 1; i++) { // also clear pifstatus
         __osPfsPifRam.ramarray[i] = 0;
     }
+    #pragma GCC diagnostic pop
 
     __osPfsPifRam.pifstatus = CONT_CMD_EXE;
 

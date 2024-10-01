@@ -1,5 +1,7 @@
 // Lakitu Enemy
 
+#include "macros.h"
+
 // Unreferenced light group
 UNUSED static const Lights1 lakitu_enemy_lights_unused1 = gdSPDefLights1(
     0x33, 0x1f, 0x0c,
@@ -20,7 +22,7 @@ UNUSED static const Lights1 lakitu_enemy_lights_unused2 = gdSPDefLights1(
 
 // Unreferenced texture
 // 0x0500ECE0
-ALIGNED8 static const Texture lakitu_enemy_seg5_texture_0500ECE0[] = {
+UNUSED ALIGNED8 static const Texture lakitu_enemy_seg5_texture_0500ECE0[] = {
 #include "actors/lakitu_enemy/lakitu_enemy_cloud_face_unused.rgba16.inc.c"
 };
 
