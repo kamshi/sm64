@@ -2,6 +2,7 @@
 /aiff_extract_codebook
 /armips
 /extract_data_for_mio
+/generate_level_header
 /patch_elf_32bit
 /skyconv
 /tabledesign
