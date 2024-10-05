@@ -25,8 +25,19 @@ elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(USED_COMPILER "clang")
 endif()
 
-set(ROM_VERSION "jp" CACHE STRING "ROM version (eu, us, jp)")
-set_property(CACHE ROM_VERSION PROPERTY STRINGS "eu" "us" "jp")
+set(ROM_VERSION "jp" CACHE STRING "ROM version (eu, us, jp, sh)")
+set_property(CACHE ROM_VERSION PROPERTY STRINGS "eu" "us" "jp" "sh")
+
+set(ROM_VERSION_STRING "")
+if(${ROM_VERSION} STREQUAL "jp")
+    set(ROM_VERSION_STRING "VERSION_JP")
+elseif(${ROM_VERSION} STREQUAL "eu")
+    set(ROM_VERSION_STRING "VERSION_EU")
+elseif(${ROM_VERSION} STREQUAL "us")
+    set(ROM_VERSION_STRING "VERSION_US")
+elseif(${ROM_VERSION} STREQUAL "sh")
+    set(ROM_VERSION_STRING "VERSION_SH")
+endif()
 
 set(CURRENT_BINARY_DIR ${CMAKE_SOURCE_DIR}/build/${ROM_VERSION})
 
@@ -318,6 +329,7 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
 
+    # clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY -Iinclude -Ibuild/jp -Ibuild/jp/include -Isrc -I. -Iinclude/libc -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 lib/asm/__osSetCompare.s | mips-linux-gnu-as -march=vr4300 -mabi=32 -Iinclude -Ibuild/jp -Ibuild/jp/include -Isrc -I. -Iinclude/libc --defsym VERSION_JP=1 --defsym F3D_OLD=1 --defsym NON_MATCHING=1 --defsym AVOID_UB=1 --defsym _FINALROM=1 -MD build/jp/lib/asm/__osSetCompare.d -o build/jp/lib/asm/__osSetCompare.o
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
@@ -328,7 +340,7 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
                 -I${CMAKE_SOURCE_DIR}/src
                 -I${CMAKE_SOURCE_DIR}
                 -I${CMAKE_SOURCE_DIR}/include/libc
-                -DVERSION_${ROM_VERSION}=1
+                -D${ROM_VERSION_STRING}=1
                 # TODO
                 -DF3D_OLD=1
                 -DNON_MATCHING=1
@@ -344,7 +356,7 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
                 -I${CMAKE_SOURCE_DIR}/src
                 -I${CMAKE_SOURCE_DIR}
                 -I${CMAKE_SOURCE_DIR}/include/libc
-                --defsym VERSION_${ROM_VERSION}=1
+                --defsym ${ROM_VERSION_STRING}=1
                 # TODO: defsym
                 --defsym F3D_OLD=1
                 --defsym NON_MATCHING=1
@@ -356,8 +368,9 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
         DEPENDS ${INPUT_FILE}
         COMMENT "Assembling file ${INPUT_FILE}"
     )
-    add_custom_target(assemble_${OUTPUT_FILENAME} ALL DEPENDS ${OUTPUT_FILE})
-    add_dependencies(assemble_files assemble_${OUTPUT_FILENAME})
+    string(REPLACE "/" "_" TARGET_NAME "assemble${INPUT_FILE}")
+    add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_FILE})
+    add_dependencies(assemble_files ${TARGET_NAME})
 endmacro()
 
 
@@ -388,7 +401,7 @@ macro(armips_file INPUT_FILE OUTPUT_FILE)
         COMMAND ${CMAKE_SOURCE_DIR}/tools/armips
         -sym ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin.sym
         # TODO
-        -definelabel VERSION_${ROM_VERSION} 1
+        -definelabel ${ROM_VERSION_STRING} 1
         -definelabel F3D_OLD 1
         -definelabel NON_MATCHING 1
         -definelabel AVOID_UB 1
@@ -431,7 +444,7 @@ add_custom_command(
         -I${CURRENT_BINARY_DIR}/
         -I${CURRENT_BINARY_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-        -DVERSION_${ROM_VERSION}=1 -DF3D_OLD=1
+        -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1
         -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -mno-shared
         -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
         -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
@@ -456,7 +469,7 @@ add_custom_command(
         -Isrc
         -I.
         -Iinclude/libc
-        -DVERSION_${ROM_VERSION}=1
+        -D${ROM_VERSION_STRING}=1
         -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 # TODO
         > ${CURRENT_BINARY_DIR}/assets/demo_data.c
     COMMAND ${CMAKE_C_COMPILER}
@@ -469,7 +482,7 @@ add_custom_command(
         -I${CURRENT_BINARY_DIR}/
         -I${CURRENT_BINARY_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-        -DVERSION_${ROM_VERSION}=1 -DF3D_OLD=1
+        -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1
         -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -mno-shared
         -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
         -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
@@ -497,7 +510,7 @@ add_custom_command(
         -I${CURRENT_BINARY_DIR}/
         -I${CURRENT_BINARY_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/
-        -DVERSION_${ROM_VERSION}=1 -DF3D_OLD=1
+        -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1
         -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -mno-shared
         -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
         -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
@@ -569,7 +582,7 @@ add_custom_command(
         ${CURRENT_BINARY_DIR}/sound/ctl_header
         ${CURRENT_BINARY_DIR}/sound/sound_data.tbl
         ${CURRENT_BINARY_DIR}/sound/tbl_header
-        -DVERSION_${ROM_VERSION}=1
+        -D${ROM_VERSION_STRING}=1
         -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 # TODO
         "$(cat ${CURRENT_BINARY_DIR}/endian-and-bitwidth)"
     COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${CURRENT_BINARY_DIR}/sound/sound_data.ctl > ${CURRENT_BINARY_DIR}/sound/sound_data.ctl.inc.c
@@ -595,7 +608,7 @@ add_custom_command(
         -I${CMAKE_SOURCE_DIR}/src
         -I${CMAKE_SOURCE_DIR}
         -I${CMAKE_SOURCE_DIR}/include/libc
-        -DVERSION_${ROM_VERSION}=1
+        -D${ROM_VERSION_STRING}=1
         # TODO
         -DF3D_OLD=1
         -DNON_MATCHING=1
@@ -611,7 +624,7 @@ add_custom_command(
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
-            --defsym VERSION_${ROM_VERSION}=1
+            --defsym ${ROM_VERSION_STRING}=1
             # TODO: defsym
             --defsym F3D_OLD=1
             --defsym NON_MATCHING=1
@@ -674,7 +687,7 @@ add_custom_command(
         ${CMAKE_SOURCE_DIR}/sound/sequences/jp/0F_event_metal_cap.m64
         ${CMAKE_SOURCE_DIR}/sound/sequences/jp/1F_cutscene_victory.m64
         ${CMAKE_SOURCE_DIR}/sound/sequences/jp/0C_level_underground.m64
-        -DVERSION_${ROM_VERSION}=1
+        -D${ROM_VERSION_STRING}=1
         -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 # TODO
         "$(cat ${CURRENT_BINARY_DIR}/endian-and-bitwidth)"
     COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${CURRENT_BINARY_DIR}/sound/sequences.bin > ${CURRENT_BINARY_DIR}/sound/sequences.bin.inc.c
