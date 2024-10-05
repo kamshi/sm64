@@ -63,8 +63,8 @@ def main():
         #print(os.path.join(args.reference_dir, file))
         if not compare_files(os.path.join(args.directory, file), os.path.join(args.reference_dir, file)):
             print("File mismatch: " + file)
-        else:
-            print("Files equal: " + file)
+        #else:
+        #    print("Files equal: " + file)
 
 if __name__ == '__main__':
     main()

@@ -689,7 +689,52 @@ add_custom_target(convert_sequences ALL DEPENDS ${CURRENT_BINARY_DIR}/sound/bank
 
 # convert textures ------------------------------------------------------------
 add_custom_target(convert_textures)
+
 macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
+    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
+    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}.inc.c
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64graphics
+                -s u8
+                -i ${OUTPUT_FILE}.inc.c
+                -g ${INPUT_FILE}
+                -f ia1
+        DEPENDS ${INPUT_FILE}
+        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+    )
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
+    add_dependencies(${TARGET_NAME} n64graphics)
+    add_dependencies(convert_textures ${TARGET_NAME})
+endmacro()
+
+macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
+    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
+    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}.inc.c
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64graphics
+                -s u32
+                -i ${OUTPUT_FILE}.inc.c
+                -g ${INPUT_FILE}
+                -f ia1
+        DEPENDS ${INPUT_FILE}
+        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+    )
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
+    add_dependencies(${TARGET_NAME} n64graphics)
+    add_dependencies(convert_textures ${TARGET_NAME})
+endmacro()
+
+macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
@@ -707,6 +752,72 @@ macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE})
+    add_dependencies(${TARGET_NAME} n64graphics)
+    add_dependencies(convert_textures ${TARGET_NAME})
+endmacro()
+
+macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
+    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
+    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}.inc.c
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64graphics
+                -s u8
+                -i ${OUTPUT_FILE}.inc.c
+                -g ${INPUT_FILE}
+                -f ia4
+        DEPENDS ${INPUT_FILE}
+        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+    )
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
+    add_dependencies(${TARGET_NAME} n64graphics)
+    add_dependencies(convert_textures ${TARGET_NAME})
+endmacro()
+
+macro(convert_texture_ia8 INPUT_FILE OUTPUT_FILE)
+    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
+    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}.inc.c
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64graphics
+                -s u8
+                -i ${OUTPUT_FILE}.inc.c
+                -g ${INPUT_FILE}
+                -f ia8
+        DEPENDS ${INPUT_FILE}
+        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+    )
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
+    add_dependencies(${TARGET_NAME} n64graphics)
+    add_dependencies(convert_textures ${TARGET_NAME})
+endmacro()
+
+macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
+    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
+    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}.inc.c
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64graphics
+                -s u8
+                -i ${OUTPUT_FILE}.inc.c
+                -g ${INPUT_FILE}
+                -f ia16
+        DEPENDS ${INPUT_FILE}
+        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+    )
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
     add_dependencies(${TARGET_NAME} n64graphics)
     add_dependencies(convert_textures ${TARGET_NAME})
 endmacro()
@@ -775,11 +886,38 @@ foreach(TEXTURE_DIRECTORY ${TEXTURE_DIRECTORIES})
         get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
         get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
         string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-        string(REGEX MATCH ".*ipl3_raw.*" IS_IA1 ${OUTPUT_DIR})
-        if(IS_IA1)
-            convert_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+
+        string(REGEX MATCH ".*ipl3_raw.*" IS_RAW ${OUTPUT_DIR})
+        if(IS_RAW)
+            convert_texture_ia1_raw(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
         else()
-            convert_texture_rgba16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+            string(REGEX MATCH ".*\.ia1.png" IS_IA1 ${PNG_FILE})
+            if(IS_IA1)
+                # special case for a single texture
+                string(REGEX MATCH ".*crash_screen_font\.ia1\.png" IS_CRASH_TEXTURE ${PNG_FILE})
+                if(IS_CRASH_TEXTURE)
+                    convert_crash_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                else()
+                    convert_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                endif()
+            else()
+                string(REGEX MATCH ".*\.ia4.png" IS_IA4 ${PNG_FILE})
+                if(IS_IA4)
+                    convert_texture_ia4(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                else()
+                    string(REGEX MATCH ".*\.ia8.png" IS_IA8 ${PNG_FILE})
+                    if(IS_IA8)
+                        convert_texture_ia8(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    else()
+                        string(REGEX MATCH ".*\.ia16.png" IS_IA16 ${PNG_FILE})
+                        if(IS_IA16)
+                            convert_texture_ia16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        else()
+                            convert_texture_rgba16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        endif()
+                    endif()
+                endif()
+            endif()
         endif()
     endforeach()
 endforeach()
