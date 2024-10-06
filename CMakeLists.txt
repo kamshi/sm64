@@ -40,7 +40,7 @@ elseif(${ROM_VERSION} STREQUAL "sh")
 endif()
 
 set(RELATIVE_BUILD_DIR build/${ROM_VERSION})
-set(ABSOLUTE_BUILD_DIR ${RELATIVE_BUILD_DIR})
+set(ABSOLUTE_BUILD_DIR ${CMAKE_SOURCE_DIR}/${RELATIVE_BUILD_DIR})
 
 # set global compiler flags ---------------------------------------------------
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
@@ -240,7 +240,7 @@ add_custom_target(preprocess_debug_text.inc.c ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/
 
 set(LEVEL_RULES_MK levels/level_rules.mk)
 add_custom_command(
-    OUTPUT ${CMAKE_SOURCE_DIR}/level_rules.mk
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/level_rules.mk
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/
     COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
             -I${CMAKE_SOURCE_DIR}/include
@@ -255,7 +255,7 @@ add_custom_command(
     DEPENDS ${CMAKE_SOURCE_DIR}/${LEVEL_RULES_MK}
     COMMENT "Preprocessing level rules: ${LEVEL_RULES_MK}"
 )
-add_custom_target(preprocess_level_rules ALL DEPENDS ${CMAKE_SOURCE_DIR}/level_rules.mk)
+add_custom_target(preprocess_level_rules ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/level_rules.mk)
 
 set(LEVEL_RULES_MK levels/level_rules.mk)
 add_custom_command(
@@ -330,9 +330,10 @@ add_custom_target(assemble_files)
 macro(assemble_file INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
-        OUTPUT ${OUTPUT_FILE}
+        OUTPUT ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
                 -I${CMAKE_SOURCE_DIR}/include
@@ -366,11 +367,12 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
                 -MD ${OUTPUT_FILE}.d
                 -o ${OUTPUT_FILE}
                 ${OUTPUT_FILE}.temp
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${INPUT_FILE}
         COMMENT "Assembling file ${INPUT_FILE}"
     )
     string(REPLACE "/" "_" TARGET_NAME "assemble${INPUT_FILE}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_FILE})
+    add_custom_target(${TARGET_NAME} ALL DEPENDS ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME})
     add_dependencies(assemble_files ${TARGET_NAME})
 endmacro()
 
@@ -378,8 +380,8 @@ file(GLOB ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/asm/*.s")
 foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    assemble_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    assemble_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
 
 add_custom_target(assemble_libultra)
@@ -436,8 +438,8 @@ file(GLOB LIB_ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/lib/asm/*.s")
 foreach(ASSEMBLY_FILE ${LIB_ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    assemble_libultra_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    assemble_libultra_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
 
 set(LIBULTRA_SOURCE_FILES
@@ -552,7 +554,7 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
     # Get the filename without extension
     get_filename_component(FILE_NAME ${SOURCE_FILE} NAME_WE)
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${SOURCE_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
     set(OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
     set(DEPENDENCY_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
@@ -623,9 +625,10 @@ add_custom_target(armips_files)
 macro(armips_file INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}.s" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
-        OUTPUT ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin
+        OUTPUT ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.bin
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND ${CMAKE_SOURCE_DIR}/tools/armips
         -sym ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin.sym
@@ -644,7 +647,7 @@ macro(armips_file INPUT_FILE OUTPUT_FILE)
         DEPENDS armips ${INPUT_FILE}
         COMMENT "Assembling file ${INPUT_FILE}"
     )
-    add_custom_target(armips_${OUTPUT_FILENAME} ALL DEPENDS ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin)
+    add_custom_target(armips_${OUTPUT_FILENAME} ALL DEPENDS ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.bin)
     add_dependencies(assemble_files armips_${OUTPUT_FILENAME})
 endmacro()
 
@@ -652,8 +655,8 @@ file(GLOB RSP_ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/rsp/*.s")
 foreach(ASSEMBLY_FILE ${RSP_ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    armips_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    armips_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
 endforeach()
 
 assemble_file("${CMAKE_SOURCE_DIR}/lib/rsp.s" "${ABSOLUTE_BUILD_DIR}/lib/rsp.o")
@@ -759,36 +762,36 @@ add_custom_target(endian_and_bitwidth ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/endian-a
 add_custom_target(encode_sounds)
 macro(encode_sound INPUT_FILE)
     get_filename_component(OUTPUT_DIR "${INPUT_FILE}" DIRECTORY)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
     get_filename_component(OUTPUT_FILENAME "${INPUT_FILE}" NAME_WLE)
     string(REPLACE "#" "_sharp_" MODIFIED_FILENAME "${OUTPUT_FILENAME}")
 
     if(${MODIFIED_FILENAME} STREQUAL ${OUTPUT_FILENAME})
         add_custom_command(
-            OUTPUT ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/
-            COMMAND ${CMAKE_SOURCE_DIR}/tools/aiff_extract_codebook ${INPUT_FILE} >${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table
-            COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table ${INPUT_FILE} ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
+            OUTPUT ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/aiff_extract_codebook ${INPUT_FILE} >${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.table
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.table ${INPUT_FILE} ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS aiff_extract_codebook vadpcm_enc
-            COMMENT "Encoding sound ${INPUT_FILE} -> ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
+            COMMENT "Encoding sound ${INPUT_FILE} -> ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
         )
     else()
         # hack: cmake output can't contain #, so we generate an additional file not containing the #
         add_custom_command(
-            OUTPUT ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/
-            COMMAND ${CMAKE_SOURCE_DIR}/tools/aiff_extract_codebook ${INPUT_FILE} >${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table
-            COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table ${INPUT_FILE} ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
-            COMMAND ${CMAKE_COMMAND} -E copy "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc" "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.aifc"
+            OUTPUT ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/aiff_extract_codebook ${INPUT_FILE} >${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.table
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.table ${INPUT_FILE} ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
+            COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc" "${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.aifc"
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS aiff_extract_codebook vadpcm_enc
-            COMMENT "Encoding sound ${INPUT_FILE} -> ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
+            COMMENT "Encoding sound ${INPUT_FILE} -> ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
         )
     endif()
 
     string(REPLACE "/" "_" TARGET_NAME "encode_sound${RELATIVE_PATH}/${MODIFIED_FILENAME}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc)
+    add_custom_target(${TARGET_NAME} ALL DEPENDS ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc)
     add_dependencies(encode_sounds ${TARGET_NAME})
 endmacro()
 
@@ -797,7 +800,7 @@ file(GLOB_RECURSE SOUND_FILES "${SOUNDS_DIR}/*.aiff")
 foreach(SOUND_FILE ${SOUND_FILES})
     get_filename_component(OUTPUT_DIR "${SOUND_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${SOUND_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
     encode_sound(${OUTPUT_DIR}/${OUTPUT_FILENAME}.aiff)
 endforeach()
 
@@ -935,7 +938,7 @@ add_custom_target(convert_textures)
 macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}.inc.c
@@ -949,7 +952,7 @@ macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
     add_dependencies(${TARGET_NAME} n64graphics)
     add_dependencies(convert_textures ${TARGET_NAME})
@@ -958,7 +961,7 @@ endmacro()
 macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}.inc.c
@@ -972,7 +975,7 @@ macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
     add_dependencies(${TARGET_NAME} n64graphics)
     add_dependencies(convert_textures ${TARGET_NAME})
@@ -981,7 +984,7 @@ endmacro()
 macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
@@ -995,7 +998,7 @@ macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE})
     add_dependencies(${TARGET_NAME} n64graphics)
     add_dependencies(convert_textures ${TARGET_NAME})
@@ -1004,7 +1007,7 @@ endmacro()
 macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}.inc.c
@@ -1018,7 +1021,7 @@ macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
     add_dependencies(${TARGET_NAME} n64graphics)
     add_dependencies(convert_textures ${TARGET_NAME})
@@ -1027,7 +1030,7 @@ endmacro()
 macro(convert_texture_ia8 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}.inc.c
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
@@ -1036,7 +1039,7 @@ macro(convert_texture_ia8 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
     add_dependencies(${TARGET_NAME} n64graphics)
     add_dependencies(convert_textures ${TARGET_NAME})
@@ -1045,7 +1048,7 @@ endmacro()
 macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}.inc.c
@@ -1059,7 +1062,7 @@ macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
     add_dependencies(${TARGET_NAME} n64graphics)
     add_dependencies(convert_textures ${TARGET_NAME})
@@ -1068,7 +1071,7 @@ endmacro()
 macro(convert_texture_rgba16 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}.inc.c
@@ -1082,7 +1085,7 @@ macro(convert_texture_rgba16 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
     add_dependencies(${TARGET_NAME} n64graphics)
     add_dependencies(convert_textures ${TARGET_NAME})
@@ -1093,35 +1096,35 @@ file(GLOB_RECURSE PNG_FILES "${TEXTURE_DIR}/*.png")
 foreach(PNG_FILE ${PNG_FILES})
     get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     string(REGEX MATCH ".*ipl3_raw.*" IS_RAW ${OUTPUT_DIR})
     if(IS_RAW)
-        convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+        convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     else()
         string(REGEX MATCH ".*\.ia1.png" IS_IA1 ${PNG_FILE})
         if(IS_IA1)
             # special case for a single texture
             string(REGEX MATCH ".*crash_screen_font\.ia1\.png" IS_CRASH_TEXTURE ${PNG_FILE})
             if(IS_CRASH_TEXTURE)
-                convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
             else()
-                convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
             endif()
         else()
             string(REGEX MATCH ".*\.ia4.png" IS_IA4 ${PNG_FILE})
             if(IS_IA4)
-                convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
             else()
                 string(REGEX MATCH ".*\.ia8.png" IS_IA8 ${PNG_FILE})
                 if(IS_IA8)
-                    convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
                     string(REGEX MATCH ".*\.ia16.png" IS_IA16 ${PNG_FILE})
                     if(IS_IA16)
-                        convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                     else()
-                        convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                     endif()
                 endif()
             endif()
@@ -1156,35 +1159,35 @@ foreach(TEXTURE_DIRECTORY ${TEXTURE_DIRECTORIES})
     foreach(PNG_FILE ${PNG_FILES})
         get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
         get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-        string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+        string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
         string(REGEX MATCH ".*ipl3_raw.*" IS_RAW ${OUTPUT_DIR})
         if(IS_RAW)
-            convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+            convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
         else()
             string(REGEX MATCH ".*\.ia1.png" IS_IA1 ${PNG_FILE})
             if(IS_IA1)
                 # special case for a single texture
                 string(REGEX MATCH ".*crash_screen_font\.ia1\.png" IS_CRASH_TEXTURE ${PNG_FILE})
                 if(IS_CRASH_TEXTURE)
-                    convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
-                    convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 endif()
             else()
                 string(REGEX MATCH ".*\.ia4.png" IS_IA4 ${PNG_FILE})
                 if(IS_IA4)
-                    convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
                     string(REGEX MATCH ".*\.ia8.png" IS_IA8 ${PNG_FILE})
                     if(IS_IA8)
-                        convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                     else()
                         string(REGEX MATCH ".*\.ia16.png" IS_IA16 ${PNG_FILE})
                         if(IS_IA16)
-                            convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                            convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                         else()
-                            convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                            convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                         endif()
                     endif()
                 endif()
@@ -1235,35 +1238,35 @@ foreach(LEVEL_DIRECTORY ${LEVEL_DIRECTORIES})
     foreach(PNG_FILE ${PNG_FILES})
         get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
         get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-        string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+        string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
         string(REGEX MATCH ".*ipl3_raw.*" IS_RAW ${OUTPUT_DIR})
         if(IS_RAW)
-            convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+            convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
         else()
             string(REGEX MATCH ".*\.ia1.png" IS_IA1 ${PNG_FILE})
             if(IS_IA1)
                 # special case for a single texture
                 string(REGEX MATCH ".*crash_screen_font\.ia1\.png" IS_CRASH_TEXTURE ${PNG_FILE})
                 if(IS_CRASH_TEXTURE)
-                    convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
-                    convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 endif()
             else()
                 string(REGEX MATCH ".*\.ia4.png" IS_IA4 ${PNG_FILE})
                 if(IS_IA4)
-                    convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
                     string(REGEX MATCH ".*\.ia8.png" IS_IA8 ${PNG_FILE})
                     if(IS_IA8)
-                        convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                     else()
                         string(REGEX MATCH ".*\.ia16.png" IS_IA16 ${PNG_FILE})
                         if(IS_IA16)
-                            convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                            convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                         else()
-                            convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                            convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                         endif()
                     endif()
                 endif()
@@ -1277,7 +1280,7 @@ add_custom_target(convert_skyboxes)
 macro(convert_skybox INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
@@ -1290,7 +1293,7 @@ macro(convert_skybox INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting skybox: ${INPUT_FILE} -> ${OUTPUT_FILE}"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_skybox${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_skybox_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE})
     add_dependencies(${TARGET_NAME} skyconv)
     add_dependencies(convert_skyboxes ${TARGET_NAME})
@@ -1305,7 +1308,7 @@ foreach(SKYBOX_DIRECTORY ${SKYBOX_DIRECTORIES})
     foreach(PNG_FILE ${PNG_FILES})
         get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
         get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-        string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+        string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
         convert_skybox(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/bin/${OUTPUT_FILENAME}_skybox")
     endforeach()
 endforeach()
@@ -1315,7 +1318,7 @@ add_custom_target(convert_cakes)
 macro(convert_cake INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
@@ -1328,7 +1331,7 @@ macro(convert_cake INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting cake: ${INPUT_FILE} -> ${OUTPUT_FILE}"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_cake${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "convert_cake_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE})
     add_dependencies(${TARGET_NAME} skyconv)
     add_dependencies(convert_cakes ${TARGET_NAME})
@@ -1343,7 +1346,7 @@ foreach(CAKE_DIRECTORY ${CAKE_DIRECTORIES})
     foreach(PNG_FILE ${PNG_FILES})
         get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
         get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-        string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+        string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
         convert_cake(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/levels/ending/${OUTPUT_FILENAME}.inc.c")
     endforeach()
 endforeach()
@@ -2132,14 +2135,10 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
     # Get the filename without extension
     get_filename_component(FILE_NAME ${SOURCE_FILE} NAME_WE)
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${SOURCE_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
-    set(OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
-    set(DEPENDENCY_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
-
-#Compiling: src/goddard/dynlists/dynlist_unused.c -> build/jp/src/goddard/dynlists/dynlist_unused.o
-#gcc -fsyntax-only -fsigned-char -fno-builtin -nostdinc -DTARGET_N64 -D_LANGUAGE_C -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB -Iinclude -Ibuild/jp -Ibuild/jp/include -Isrc -I. -Iinclude/libc -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -m32 -MMD -MP -MT build/jp/src/goddard/dynlists/dynlist_unused.o -MF build/jp/src/goddard/dynlists/dynlist_unused.d src/goddard/dynlists/dynlist_unused.c
-#mips-linux-gnu-gcc -c -G 0 -O2 -nostdinc -DTARGET_N64 -D_LANGUAGE_C -mips3 -Iinclude -Ibuild/jp -Ibuild/jp/include -Isrc -I. -Iinclude/libc -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks -fno-stack-protector -fno-common -fno-zero-initialized-in-bss -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions -ffreestanding -fwrapv -Wall -Wextra -Werror -o build/jp/src/goddard/dynlists/dynlist_unused.o src/goddard/dynlists/dynlist_unused.c
+    set(OBJECT_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(DEPENDENCY_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
 
     # Add a custom command to compile the source file
     add_custom_command(
@@ -2153,8 +2152,8 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${ABSOLUTE_BUILD_DIR}/
-            -I${ABSOLUTE_BUILD_DIR}/include/
+            -I${RELATIVE_BUILD_DIR}/
+            -I${RELATIVE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -m32 -MMD -MP -MT ${OBJECT_FILE}
@@ -2166,8 +2165,8 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${ABSOLUTE_BUILD_DIR}/
-            -I${ABSOLUTE_BUILD_DIR}/include/
+            -I${RELATIVE_BUILD_DIR}/
+            -I${RELATIVE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
@@ -2176,6 +2175,7 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
             -ffreestanding -fwrapv -Wall -Wextra -Werror
             -o ${OBJECT_FILE}
             ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${SOURCE_FILE}
         COMMENT "Compiling ${CMAKE_SOURCE_DIR}/${SOURCE_FILE} -> ${OBJECT_FILE}"
     )
@@ -2193,6 +2193,7 @@ add_custom_command(
     COMMAND mips-linux-gnu-ar
             rcs -o ${ABSOLUTE_BUILD_DIR}/libgoddard.a
             ${GODDARD_OBJECT_FILES}  # Input object file
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS ${GODDARD_OBJECT_FILES}
     COMMENT "Compiling and linking to create libgoddard"
 )
@@ -2220,10 +2221,10 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
     # Get the filename without extension
     get_filename_component(FILE_NAME ${SOURCE_FILE} NAME_WE)
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${SOURCE_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
-    set(OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
-    set(DEPENDENCY_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
+    set(OBJECT_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(DEPENDENCY_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
 
     # Add a custom command to compile the source file
     add_custom_command(
@@ -2260,6 +2261,7 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
             -ffreestanding -fwrapv -Wall -Wextra -Werror
             -o ${OBJECT_FILE}
             ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${SOURCE_FILE}
         COMMENT "Compiling ${CMAKE_SOURCE_DIR}/${SOURCE_FILE} -> ${OBJECT_FILE}"
     )
@@ -2276,13 +2278,13 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
 
-    set(ABS_OBJECT_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.o)
-    set(ABS_DEPENDENCY_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.d)
-    set(ABS_OUTPUT_ELF ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf)
-    set(ABS_OUTPUT_BIN ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin)
-    set(ABS_OUTPUT_MIO0 ${OUTPUT_DIR}/${OUTPUT_FILENAME}.mio0)
-
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+
+    set(ABS_OBJECT_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
+    set(ABS_DEPENDENCY_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.d)
+    set(ABS_OUTPUT_ELF ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf)
+    set(ABS_OUTPUT_BIN ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.bin)
+    set(ABS_OUTPUT_MIO0 ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.mio0)
 
     set(OBJECT_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
     set(DEPENDENCY_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.d)
@@ -2328,8 +2330,8 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/mio0 ${OUTPUT_BIN} ${OUTPUT_MIO0}
             # to object file
             COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
-            DEPENDS ${INPUT_FILE}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            DEPENDS ${INPUT_FILE}
             COMMENT "Compiling and linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
         )
     else()
@@ -2349,8 +2351,8 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/mio0 ${OUTPUT_BIN} ${OUTPUT_MIO0}
             # to object file
             COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
-            DEPENDS ${INPUT_FILE}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+            DEPENDS ${INPUT_FILE}
             COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
         )
     endif()
@@ -2368,13 +2370,13 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
 
-    set(ABS_OBJECT_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.o)
-    set(ABS_DEPENDENCY_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.d)
-    set(ABS_OUTPUT_ELF ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf)
-    set(ABS_OUTPUT_BIN ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin)
-    set(ABS_OUTPUT_MIO0 ${OUTPUT_DIR}/${OUTPUT_FILENAME}.mio0)
-
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+
+    set(ABS_OBJECT_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
+    set(ABS_DEPENDENCY_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.d)
+    set(ABS_OUTPUT_ELF ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf)
+    set(ABS_OUTPUT_BIN ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.bin)
+    set(ABS_OUTPUT_MIO0 ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.mio0)
 
     set(OBJECT_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
     set(DEPENDENCY_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.d)
@@ -2460,26 +2462,26 @@ endforeach()
 
 # build/[eu/jp/sh/us]/actors/*.o ----------------------------------------------
 set(ACTORS_OBJECT_FILES_TO_ELF_FILES
-    "${ABSOLUTE_BUILD_DIR}/actors/common0.o#0x08000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/common1.o#0x03000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group0.o#0x04000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group1.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group2.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group3.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group4.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group5.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group6.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group7.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group8.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group9.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group10.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group11.o#0x05000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group12.o#0x06000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group13.o#0x06000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group14.o#0x06000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group15.o#0x06000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group16.o#0x06000000"
-    "${ABSOLUTE_BUILD_DIR}/actors/group17.o#0x06000000"
+    "${RELATIVE_BUILD_DIR}/actors/common0.o#0x08000000"
+    "${RELATIVE_BUILD_DIR}/actors/common1.o#0x03000000"
+    "${RELATIVE_BUILD_DIR}/actors/group0.o#0x04000000"
+    "${RELATIVE_BUILD_DIR}/actors/group1.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group2.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group3.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group4.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group5.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group6.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group7.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group8.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group9.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group10.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group11.o#0x05000000"
+    "${RELATIVE_BUILD_DIR}/actors/group12.o#0x06000000"
+    "${RELATIVE_BUILD_DIR}/actors/group13.o#0x06000000"
+    "${RELATIVE_BUILD_DIR}/actors/group14.o#0x06000000"
+    "${RELATIVE_BUILD_DIR}/actors/group15.o#0x06000000"
+    "${RELATIVE_BUILD_DIR}/actors/group16.o#0x06000000"
+    "${RELATIVE_BUILD_DIR}/actors/group17.o#0x06000000"
 )
 
 foreach(OBJECT_TO_ELF_FILE ${ACTORS_OBJECT_FILES_TO_ELF_FILES})
@@ -2488,45 +2490,44 @@ foreach(OBJECT_TO_ELF_FILE ${ACTORS_OBJECT_FILES_TO_ELF_FILES})
     list(GET OBJECT_TTEXT_PAIR 1 TTEXT)
     get_filename_component(OUTPUT_DIR "${OBJECT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OBJECT_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    mio_file(${OBJECT_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
+    mio_file(${OBJECT_FILE} "${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf" ${TTEXT})
 endforeach()
 
 # build/[eu/jp/sh/us]/levels/*/leveldata.o ----------------------------------------------
 set(LEVELDATA_OBJECT_FILES_TO_ELF_FILES
-    "${ABSOLUTE_BUILD_DIR}/levels/bbh/leveldata.o#build/${ROM_VERSION}/bin/spooky.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/bitdw/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/bitfs/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/bits/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/bob/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/bowser_1/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/bowser_2/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/bowser_3/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/castle_courtyard/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/castle_grounds/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/castle_inside/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/ccm/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/cotmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/ddd/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/ending/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/hmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/intro/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/jrb/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/lll/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/menu/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/pss/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/rr/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/sa/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/sl/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/ssl/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/thi/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/totwc/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/ttc/leveldata.o#build/${ROM_VERSION}/bin/machine.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/ttm/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/vcutm/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/wdw/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/wf/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
-    "${ABSOLUTE_BUILD_DIR}/levels/wmotr/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${RELATIVE_BUILD_DIR}/levels/bbh/leveldata.o#build/${ROM_VERSION}/bin/spooky.elf"
+    "${RELATIVE_BUILD_DIR}/levels/bitdw/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${RELATIVE_BUILD_DIR}/levels/bitfs/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${RELATIVE_BUILD_DIR}/levels/bits/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${RELATIVE_BUILD_DIR}/levels/bob/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${RELATIVE_BUILD_DIR}/levels/bowser_1/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${RELATIVE_BUILD_DIR}/levels/bowser_2/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
+    "${RELATIVE_BUILD_DIR}/levels/bowser_3/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${RELATIVE_BUILD_DIR}/levels/castle_courtyard/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${RELATIVE_BUILD_DIR}/levels/castle_grounds/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${RELATIVE_BUILD_DIR}/levels/castle_inside/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
+    "${RELATIVE_BUILD_DIR}/levels/ccm/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
+    "${RELATIVE_BUILD_DIR}/levels/cotmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
+    "${RELATIVE_BUILD_DIR}/levels/ddd/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
+    "${RELATIVE_BUILD_DIR}/levels/ending/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${RELATIVE_BUILD_DIR}/levels/hmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
+    "${RELATIVE_BUILD_DIR}/levels/intro/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${RELATIVE_BUILD_DIR}/levels/jrb/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
+    "${RELATIVE_BUILD_DIR}/levels/lll/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
+    "${RELATIVE_BUILD_DIR}/levels/menu/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${RELATIVE_BUILD_DIR}/levels/pss/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
+    "${RELATIVE_BUILD_DIR}/levels/rr/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${RELATIVE_BUILD_DIR}/levels/sa/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
+    "${RELATIVE_BUILD_DIR}/levels/sl/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
+    "${RELATIVE_BUILD_DIR}/levels/ssl/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${RELATIVE_BUILD_DIR}/levels/thi/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${RELATIVE_BUILD_DIR}/levels/totwc/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${RELATIVE_BUILD_DIR}/levels/ttc/leveldata.o#build/${ROM_VERSION}/bin/machine.elf"
+    "${RELATIVE_BUILD_DIR}/levels/ttm/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
+    "${RELATIVE_BUILD_DIR}/levels/vcutm/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${RELATIVE_BUILD_DIR}/levels/wdw/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${RELATIVE_BUILD_DIR}/levels/wf/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${RELATIVE_BUILD_DIR}/levels/wmotr/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
 )
 
 foreach(OBJECT_TO_ELF_FILE ${LEVELDATA_OBJECT_FILES_TO_ELF_FILES})
@@ -2535,23 +2536,22 @@ foreach(OBJECT_TO_ELF_FILE ${LEVELDATA_OBJECT_FILES_TO_ELF_FILES})
     list(GET OBJECT_ELF_PAIR 1 ELF_FILE)
     get_filename_component(OUTPUT_DIR "${OBJECT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OBJECT_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    mio_leveldata(${OBJECT_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${ELF_FILE})
+    mio_leveldata(${OBJECT_FILE} "${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf" ${ELF_FILE})
 endforeach()
 
 # build/[eu/jp/sh/us]/bin/*_skybox.c ----------------------------------------------
 # these are generated by converting the skybox textures
 set(SKYBOX_SOURCE_FILES_TO_ELF_FILES
-    "${ABSOLUTE_BUILD_DIR}/bin/wdw_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/bbh_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/bidw_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/bitfs_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/bits_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/ccm_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/cloud_floor_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/clouds_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/ssl_skybox.c#0x0A000000"
-    "${ABSOLUTE_BUILD_DIR}/bin/water_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/wdw_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/bbh_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/bidw_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/bitfs_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/bits_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/ccm_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/cloud_floor_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/clouds_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/ssl_skybox.c#0x0A000000"
+    "${RELATIVE_BUILD_DIR}/bin/water_skybox.c#0x0A000000"
 )
 
 foreach(SOURCE_FILE_TO_ELF ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
@@ -2560,8 +2560,7 @@ foreach(SOURCE_FILE_TO_ELF ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
     list(GET SOURCE_TTEXT_PAIR 1 TTEXT)
     get_filename_component(OUTPUT_DIR "${SOURCE_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${SOURCE_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    mio_file(${SOURCE_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
+    mio_file(${SOURCE_FILE} "${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf" ${TTEXT})
 endforeach()
 
 # add executable --------------------------------------------------------------
