@@ -426,6 +426,7 @@ macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
                 -MD ${OUTPUT_FILE}.d
                 -o ${OUTPUT_FILE}
                 ${OUTPUT_FILE}.temp
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${INPUT_FILE}
         COMMENT "Assembling file ${INPUT_FILE}"
     )
@@ -435,7 +436,40 @@ macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
     add_dependencies(assemble_libultra ${TARGET_NAME})
 endmacro()
 
-file(GLOB LIB_ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/lib/asm/*.s")
+# IMPORTANT: the order here matters for the linking stage
+set(LIB_ASSEMBLY_FILES
+    lib/asm/__osGetSR.s
+    lib/asm/iQueKernelCalls.s
+    lib/asm/__osDisableInt.s
+    lib/asm/osGetCount.s
+    lib/asm/__os_eu_802ef550.s
+    lib/asm/__osSetFpcCsr.s
+    lib/asm/bcopy.s
+    lib/asm/__osGetCause.s
+    lib/asm/__osSetCompare.s
+    lib/asm/llmuldiv_gcc.s
+    lib/asm/osWritebackDCacheAll.s
+    lib/asm/guScale.s
+    lib/asm/parameters.s
+    lib/asm/osMapTLBRdb.s
+    lib/asm/bzero.s
+    lib/asm/osInvalDCache.s
+    lib/asm/sqrtf.s
+    lib/asm/__osExceptionPreamble.s
+    lib/asm/guMtxF2L.s
+    lib/asm/osUnmapTLBAll.s
+    lib/asm/osSetIntMask.s
+    lib/asm/guTranslate.s
+    lib/asm/osInvalICache.s
+    lib/asm/__osRestoreInt.s
+    lib/asm/guNormalize.s
+    lib/asm/__osSetSR.s
+    lib/asm/__osProbeTLB.s
+    lib/asm/osMapTLB.s
+    lib/asm/osWritebackDCache.s
+    lib/asm/guMtxIdentF.s
+    lib/asm/__osSetWatchLo.s
+)
 foreach(ASSEMBLY_FILE ${LIB_ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
@@ -443,108 +477,108 @@ foreach(ASSEMBLY_FILE ${LIB_ASSEMBLY_FILES})
     assemble_libultra_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
 
+# IMPORTANT: the order here matters for the linking stage
 set(LIBULTRA_SOURCE_FILES
-    lib/src/NaN.c
-    lib/src/_Ldtob.c
-    lib/src/_Litob.c
-    lib/src/_Printf.c
-    lib/src/__osAiDeviceBusy.c
-    lib/src/__osAtomicDec.c
-    lib/src/__osDequeueThread.c
-    lib/src/__osDevMgrMain.c
-    lib/src/__osGetCurrFaultedThread.c
-    lib/src/__osPiCreateAccessQueue.c
-    lib/src/__osResetGlobalIntMask.c
-    lib/src/__osSetGlobalIntMask.c
-    lib/src/__osSetHWintrRoutine.c
-    lib/src/__osSiCreateAccessQueue.c
-    lib/src/__osSiDeviceBusy.c
-    lib/src/__osSiRawReadIo.c
-    lib/src/__osSiRawStartDma.c
-    lib/src/__osSiRawWriteIo.c
-    lib/src/__osSpDeviceBusy.c
-    lib/src/__osSpGetStatus.c
-    lib/src/__osSpRawStartDma.c
-    lib/src/__osSpSetPc.c
-    lib/src/__osSpSetStatus.c
-    lib/src/__osSyncPutChars.c
-    lib/src/__osViGetCurrentContext.c
-    lib/src/__osViInit.c
-    lib/src/__osViSwapContext.c
-    lib/src/alBnkfNew.c
-    lib/src/contramread.c
     lib/src/contramwrite.c
-    lib/src/crc.c
-    lib/src/epidma.c
-    lib/src/guLookAtRef.c
-    lib/src/guMtxF2L.c
-    lib/src/guNormalize.c
-    lib/src/guOrthoF.c
-    lib/src/guPerspectiveF.c
-    lib/src/guRotateF.c
-    lib/src/guScaleF.c
-    lib/src/guTranslateF.c
-    lib/src/kdebugserver.c
-    lib/src/kdebugserver_stack.c
-    lib/src/ldiv.c
-    lib/src/leointerrupt.c
-    lib/src/motor.c
     lib/src/osAiGetLength.c
-    lib/src/osAiSetFrequency.c
-    lib/src/osAiSetNextBuffer.c
-    lib/src/osCartRomInit.c
-    lib/src/osContInit.c
+    lib/src/osPiStartDma.c
+    lib/src/guOrthoF.c
+    lib/src/osViSetMode.c
+    lib/src/__osGetCurrFaultedThread.c
+    lib/src/__osDevMgrMain.c
     lib/src/osContStartReadData.c
-    lib/src/osCreateMesgQueue.c
-    lib/src/osCreatePiManager.c
-    lib/src/osCreateThread.c
-    lib/src/osCreateViManager.c
-    lib/src/osDestroyThread.c
-    lib/src/osDriveRomInit.c
-    lib/src/osEPiRawReadIo.c
-    lib/src/osEPiRawStartDma.c
-    lib/src/osEPiRawWriteIo.c
-    lib/src/osEepromLongRead.c
-    lib/src/osEepromLongWrite.c
-    lib/src/osEepromProbe.c
+    lib/src/osViTable.c
+    lib/src/leointerrupt.c
+    lib/src/__osSpSetStatus.c
+    lib/src/string.c
     lib/src/osEepromRead.c
     lib/src/osEepromWrite.c
-    lib/src/osGetThreadPri.c
-    lib/src/osGetTime.c
-    lib/src/osInitialize.c
-    lib/src/osInitializeIQueWrapper.c
-    lib/src/osJamMesg.c
-    lib/src/osLeoDiskInit.c
-    lib/src/osPfsIsPlug.c
-    lib/src/osPiGetCmdQueue.c
-    lib/src/osPiRawReadIo.c
-    lib/src/osPiRawStartDma.c
-    lib/src/osPiStartDma.c
-    lib/src/osRecvMesg.c
-    lib/src/osSendMesg.c
+    lib/src/__osAtomicDec.c
     lib/src/osSetEventMesg.c
-    lib/src/osSetThreadPri.c
-    lib/src/osSetTime.c
-    lib/src/osSetTimer.c
-    lib/src/osSpTaskLoadGo.c
-    lib/src/osSpTaskYield.c
-    lib/src/osSpTaskYielded.c
-    lib/src/osStartThread.c
+    lib/src/__osViInit.c
+    lib/src/__osSiRawStartDma.c
     lib/src/osSyncPrintf.c
-    lib/src/osTimer.c
-    lib/src/osViBlack.c
+    lib/src/kdebugserver_stack.c
+    lib/src/contramread.c
+    lib/src/osCreateViManager.c
+    lib/src/__osSpGetStatus.c
+    lib/src/osSetThreadPri.c
     lib/src/osViData.c
-    lib/src/osViSetEvent.c
-    lib/src/osViSetMode.c
-    lib/src/osViSetSpecialFeatures.c
-    lib/src/osViSwapBuffer.c
-    lib/src/osViTable.c
-    lib/src/osVirtualToPhysical.c
-    lib/src/osYieldThread.c
+    lib/src/guRotateF.c
+    lib/src/__osSetHWintrRoutine.c
+    lib/src/__osSiCreateAccessQueue.c
+    lib/src/osGetThreadPri.c
+    lib/src/osPfsIsPlug.c
+    lib/src/osJamMesg.c
+    lib/src/osEepromLongRead.c
+    lib/src/osSetTimer.c
+    lib/src/osEPiRawWriteIo.c
     lib/src/pfsgetstatus.c
+    lib/src/epidma.c
+    lib/src/__osSiRawReadIo.c
+    lib/src/osCreateMesgQueue.c
+    lib/src/NaN.c
+    lib/src/osTimer.c
+    lib/src/_Printf.c
+    lib/src/guMtxF2L.c
+    lib/src/__osSpDeviceBusy.c
+    lib/src/osEepromProbe.c
+    lib/src/__osSiRawWriteIo.c
+    lib/src/osSpTaskYielded.c
+    lib/src/__osSetGlobalIntMask.c
+    lib/src/osEPiRawStartDma.c
+    lib/src/osCreateThread.c
+    lib/src/__osSpRawStartDma.c
+    lib/src/osViBlack.c
+    lib/src/guTranslateF.c
+    lib/src/osAiSetNextBuffer.c
+    lib/src/osDestroyThread.c
+    lib/src/_Ldtob.c
+    lib/src/osEPiRawReadIo.c
+    lib/src/guNormalize.c
+    lib/src/osRecvMesg.c
+    lib/src/kdebugserver.c
+    lib/src/__osPiCreateAccessQueue.c
+    lib/src/alBnkfNew.c
+    lib/src/__osViSwapContext.c
+    lib/src/osDriveRomInit.c
+    lib/src/__osViGetCurrentContext.c
+    lib/src/motor.c
+    lib/src/osPiRawStartDma.c
+    lib/src/osSpTaskYield.c
+    lib/src/osPiRawReadIo.c
+    lib/src/osAiSetFrequency.c
+    lib/src/guScaleF.c
+    lib/src/__osResetGlobalIntMask.c
+    lib/src/__osSiDeviceBusy.c
+    lib/src/osPiGetCmdQueue.c
+    lib/src/osSetTime.c
+    lib/src/__osDequeueThread.c
+    lib/src/osVirtualToPhysical.c
+    lib/src/__osSyncPutChars.c
+    lib/src/crc.c
+    lib/src/ldiv.c
+    lib/src/osCartRomInit.c
+    lib/src/osSendMesg.c
+    lib/src/osContInit.c
+    lib/src/guLookAtRef.c
+    lib/src/osLeoDiskInit.c
+    lib/src/osYieldThread.c
     lib/src/sprintf.c
-    lib/src/string.c
-    # math
+    lib/src/osInitializeIQueWrapper.c
+    lib/src/osViSetEvent.c
+    lib/src/_Litob.c
+    lib/src/osViSetSpecialFeatures.c
+    lib/src/osStartThread.c
+    lib/src/osViSwapBuffer.c
+    lib/src/__osAiDeviceBusy.c
+    lib/src/osEepromLongWrite.c
+    lib/src/osGetTime.c
+    lib/src/__osSpSetPc.c
+    lib/src/osCreatePiManager.c
+    lib/src/guPerspectiveF.c
+    lib/src/osInitialize.c
+    lib/src/osSpTaskLoadGo.c
     lib/src/math/llmuldiv.c
     lib/src/math/sinf.c
     lib/src/math/llconv.c
@@ -595,6 +629,7 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
             -ffreestanding -fwrapv -Wall -Wextra -Werror
             -o ${OBJECT_FILE}
             ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${SOURCE_FILE}
         COMMENT "Compiling ${CMAKE_SOURCE_DIR}/${SOURCE_FILE} -> ${OBJECT_FILE}"
     )
@@ -605,17 +640,21 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
     add_custom_target(${TARGET_NAME} DEPENDS ${OBJECT_FILE})
 endforeach()
 
-#build/jp/lib/src/math/llmuldiv.o build/jp/lib/src/math/sinf.o build/jp/lib/src/math/llconv.o build/jp/lib/src/math/cosf.o
-#tools/patch_elf_32bit build/jp/libultra.a
+set(RELATIVE_LIBULTRA_OBJECT_FILES)
+foreach(OBJECT_FILE ${LIBULTRA_OBJECT_FILES})
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OBJECT_FILE}")
+    list(APPEND RELATIVE_LIBULTRA_OBJECT_FILES ${RELATIVE_PATH})
+endforeach()
 
 add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/libultra.a
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # link
     COMMAND mips-linux-gnu-ar
-            rcs -o ${ABSOLUTE_BUILD_DIR}/libultra.a
-            ${LIBULTRA_OBJECT_FILES}
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/patch_elf_32bit ${ABSOLUTE_BUILD_DIR}/libultra.a
+            rcs -o ${RELATIVE_BUILD_DIR}/libultra.a
+            ${RELATIVE_LIBULTRA_OBJECT_FILES}
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/patch_elf_32bit ${RELATIVE_BUILD_DIR}/libultra.a
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS ${LIBULTRA_OBJECT_FILES} patch_elf_32bit
     COMMENT "Linking libultra"
 )
@@ -2570,6 +2609,12 @@ foreach(ELF_FILE ${ELF_FILES})
     list(APPEND R_ELF_FILES "-R ${ELF_FILE}")
 endforeach()
 
+set(RELATIVE_OBJECT_FILES)
+foreach(OBJECT_FILE ${OBJECT_FILES})
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OBJECT_FILE}")
+    list(APPEND RELATIVE_OBJECT_FILES ${RELATIVE_PATH})
+endforeach()
+
 add_custom_command(
     OUTPUT ${SM64_ELF}
     COMMAND ${CMAKE_LINKER}
@@ -2581,7 +2626,7 @@ add_custom_command(
     --no-check-sections
     ${R_ELF_FILES}
     -o ${SM64_ELF}
-    ${OBJECT_FILES}
+    ${RELATIVE_OBJECT_FILES}
     # TODO
     build/jp/asm/boot.o build/jp/asm/decompress.o build/jp/asm/entry.o build/jp/asm/ipl3_font.o build/jp/asm/rom_header.o build/jp/assets/demo_data.o build/jp/assets/mario_anim_data.o build/jp/bin/cave.o build/jp/bin/debug_level_select.o build/jp/bin/effect.o build/jp/bin/fire.o build/jp/bin/generic.o build/jp/bin/grass.o build/jp/bin/inside.o build/jp/bin/machine.o build/jp/bin/mountain.o build/jp/bin/outside.o build/jp/bin/segment2.o build/jp/bin/sky.o build/jp/bin/snow.o build/jp/bin/spooky.o build/jp/bin/title_screen_bg.o build/jp/bin/water.o build/jp/lib/rsp.o
     -lultra -lgoddard -lgcc
@@ -2599,7 +2644,8 @@ add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})
 #    --no-check-sections
 #    ${R_ELF_FILES}
 #    -o ${SM64_ELF}
-#    ${OBJECT_FILES}
+#    ${RELATIVE_OBJECT_FILES}
+#    build/jp/asm/boot.o build/jp/asm/decompress.o build/jp/asm/entry.o build/jp/asm/ipl3_font.o build/jp/asm/rom_header.o build/jp/assets/demo_data.o build/jp/assets/mario_anim_data.o build/jp/bin/cave.o build/jp/bin/debug_level_select.o build/jp/bin/effect.o build/jp/bin/fire.o build/jp/bin/generic.o build/jp/bin/grass.o build/jp/bin/inside.o build/jp/bin/machine.o build/jp/bin/mountain.o build/jp/bin/outside.o build/jp/bin/segment2.o build/jp/bin/sky.o build/jp/bin/snow.o build/jp/bin/spooky.o build/jp/bin/title_screen_bg.o build/jp/bin/water.o build/jp/lib/rsp.o
 #    -lultra -lgoddard -lgcc")
 
 #add_executable(sm64 ${OBJECT_FILES})
