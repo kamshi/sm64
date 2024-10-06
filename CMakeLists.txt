@@ -39,8 +39,8 @@ elseif(${ROM_VERSION} STREQUAL "sh")
     set(ROM_VERSION_STRING "VERSION_SH")
 endif()
 
-+set(RELATIVE_BUILD_DIR build/${ROM_VERSION})
-+set(ABSOLUTE_BUILD_DIR ${RELATIVE_BUILD_DIR})
+set(RELATIVE_BUILD_DIR build/${ROM_VERSION})
+set(ABSOLUTE_BUILD_DIR ${RELATIVE_BUILD_DIR})
 
 # set global compiler flags ---------------------------------------------------
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
