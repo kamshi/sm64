@@ -373,7 +373,6 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
     add_dependencies(assemble_files ${TARGET_NAME})
 endmacro()
 
-
 file(GLOB ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/asm/*.s")
 foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
@@ -382,13 +381,242 @@ foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     assemble_file(${ASSEMBLY_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
 
+add_custom_target(assemble_libultra)
+set(LIBULTRA_OBJECT_FILES)
+macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
+    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
+    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+
+    add_custom_command(
+        OUTPUT ${OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
+                -I${CMAKE_SOURCE_DIR}/include
+                -I${CURRENT_BINARY_DIR}
+                -I${CURRENT_BINARY_DIR}/include
+                -I${CMAKE_SOURCE_DIR}/src
+                -I${CMAKE_SOURCE_DIR}
+                -I${CMAKE_SOURCE_DIR}/include/libc
+                -D${ROM_VERSION_STRING}=1
+                # TODO
+                -DF3D_OLD=1
+                -DNON_MATCHING=1
+                -DAVOID_UB=1
+                -D_FINALROM=1
+                -o ${OUTPUT_FILE}.temp
+                ${INPUT_FILE}
+        COMMAND mips-linux-gnu-as
+                -march=vr4300 -mabi=32
+                -I${CMAKE_SOURCE_DIR}/include
+                -I${CURRENT_BINARY_DIR}
+                -I${CURRENT_BINARY_DIR}/include
+                -I${CMAKE_SOURCE_DIR}/src
+                -I${CMAKE_SOURCE_DIR}
+                -I${CMAKE_SOURCE_DIR}/include/libc
+                --defsym ${ROM_VERSION_STRING}=1
+                # TODO: defsym
+                --defsym F3D_OLD=1
+                --defsym NON_MATCHING=1
+                --defsym AVOID_UB=1
+                --defsym _FINALROM=1
+                -MD ${OUTPUT_FILE}.d
+                -o ${OUTPUT_FILE}
+                ${OUTPUT_FILE}.temp
+        DEPENDS ${INPUT_FILE}
+        COMMENT "Assembling file ${INPUT_FILE}"
+    )
+    string(REPLACE "/" "_" TARGET_NAME "assemble${INPUT_FILE}")
+    add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_FILE})
+    list(APPEND LIBULTRA_OBJECT_FILES ${OUTPUT_FILE})
+    add_dependencies(assemble_libultra ${TARGET_NAME})
+endmacro()
+
 file(GLOB LIB_ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/lib/asm/*.s")
 foreach(ASSEMBLY_FILE ${LIB_ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    assemble_file(${ASSEMBLY_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
+    assemble_libultra_file(${ASSEMBLY_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
+
+set(LIBULTRA_SOURCE_FILES
+    lib/src/NaN.c
+    lib/src/_Ldtob.c
+    lib/src/_Litob.c
+    lib/src/_Printf.c
+    lib/src/__osAiDeviceBusy.c
+    lib/src/__osAtomicDec.c
+    lib/src/__osDequeueThread.c
+    lib/src/__osDevMgrMain.c
+    lib/src/__osGetCurrFaultedThread.c
+    lib/src/__osPiCreateAccessQueue.c
+    lib/src/__osResetGlobalIntMask.c
+    lib/src/__osSetGlobalIntMask.c
+    lib/src/__osSetHWintrRoutine.c
+    lib/src/__osSiCreateAccessQueue.c
+    lib/src/__osSiDeviceBusy.c
+    lib/src/__osSiRawReadIo.c
+    lib/src/__osSiRawStartDma.c
+    lib/src/__osSiRawWriteIo.c
+    lib/src/__osSpDeviceBusy.c
+    lib/src/__osSpGetStatus.c
+    lib/src/__osSpRawStartDma.c
+    lib/src/__osSpSetPc.c
+    lib/src/__osSpSetStatus.c
+    lib/src/__osSyncPutChars.c
+    lib/src/__osViGetCurrentContext.c
+    lib/src/__osViInit.c
+    lib/src/__osViSwapContext.c
+    lib/src/alBnkfNew.c
+    lib/src/contramread.c
+    lib/src/contramwrite.c
+    lib/src/crc.c
+    lib/src/epidma.c
+    lib/src/guLookAtRef.c
+    lib/src/guMtxF2L.c
+    lib/src/guNormalize.c
+    lib/src/guOrthoF.c
+    lib/src/guPerspectiveF.c
+    lib/src/guRotateF.c
+    lib/src/guScaleF.c
+    lib/src/guTranslateF.c
+    lib/src/kdebugserver.c
+    lib/src/kdebugserver_stack.c
+    lib/src/ldiv.c
+    lib/src/leointerrupt.c
+    lib/src/motor.c
+    lib/src/osAiGetLength.c
+    lib/src/osAiSetFrequency.c
+    lib/src/osAiSetNextBuffer.c
+    lib/src/osCartRomInit.c
+    lib/src/osContInit.c
+    lib/src/osContStartReadData.c
+    lib/src/osCreateMesgQueue.c
+    lib/src/osCreatePiManager.c
+    lib/src/osCreateThread.c
+    lib/src/osCreateViManager.c
+    lib/src/osDestroyThread.c
+    lib/src/osDriveRomInit.c
+    lib/src/osEPiRawReadIo.c
+    lib/src/osEPiRawStartDma.c
+    lib/src/osEPiRawWriteIo.c
+    lib/src/osEepromLongRead.c
+    lib/src/osEepromLongWrite.c
+    lib/src/osEepromProbe.c
+    lib/src/osEepromRead.c
+    lib/src/osEepromWrite.c
+    lib/src/osGetThreadPri.c
+    lib/src/osGetTime.c
+    lib/src/osInitialize.c
+    lib/src/osInitializeIQueWrapper.c
+    lib/src/osJamMesg.c
+    lib/src/osLeoDiskInit.c
+    lib/src/osPfsIsPlug.c
+    lib/src/osPiGetCmdQueue.c
+    lib/src/osPiRawReadIo.c
+    lib/src/osPiRawStartDma.c
+    lib/src/osPiStartDma.c
+    lib/src/osRecvMesg.c
+    lib/src/osSendMesg.c
+    lib/src/osSetEventMesg.c
+    lib/src/osSetThreadPri.c
+    lib/src/osSetTime.c
+    lib/src/osSetTimer.c
+    lib/src/osSpTaskLoadGo.c
+    lib/src/osSpTaskYield.c
+    lib/src/osSpTaskYielded.c
+    lib/src/osStartThread.c
+    lib/src/osSyncPrintf.c
+    lib/src/osTimer.c
+    lib/src/osViBlack.c
+    lib/src/osViData.c
+    lib/src/osViSetEvent.c
+    lib/src/osViSetMode.c
+    lib/src/osViSetSpecialFeatures.c
+    lib/src/osViSwapBuffer.c
+    lib/src/osViTable.c
+    lib/src/osVirtualToPhysical.c
+    lib/src/osYieldThread.c
+    lib/src/pfsgetstatus.c
+    lib/src/sprintf.c
+    lib/src/string.c
+    # math
+    lib/src/math/llmuldiv.c
+    lib/src/math/sinf.c
+    lib/src/math/llconv.c
+    lib/src/math/cosf.c
+)
+
+foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
+    # Get the filename without extension
+    get_filename_component(FILE_NAME ${SOURCE_FILE} NAME_WE)
+    get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
+    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${SOURCE_DIR}")
+    # Set the object file name
+    set(OBJECT_FILE ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(DEPENDENCY_FILE ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
+
+    # Add a custom command to compile the source file
+    add_custom_command(
+        OUTPUT ${OBJECT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/
+        COMMAND gcc
+            -fsyntax-only -fsigned-char -fno-builtin -nostdinc
+            -DTARGET_N64 -D_LANGUAGE_C -std=gnu90
+            -Wall -Wextra -Wno-format-security -Wno-main
+            -DNON_MATCHING -DAVOID_UB
+            -I${CMAKE_SOURCE_DIR}/include/
+            -I${CMAKE_SOURCE_DIR}/include/libc/
+            -I${CMAKE_SOURCE_DIR}/src/
+            -I${CURRENT_BINARY_DIR}/
+            -I${CURRENT_BINARY_DIR}/include/
+            -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
+            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+            -m32 -MMD -MP -MT ${OBJECT_FILE}
+            -MF ${DEPENDENCY_FILE}
+            ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
+        COMMAND ${CMAKE_C_COMPILER}
+            -c
+            -G 0 -O2 -nostdinc -DTARGET_N64 -D_LANGUAGE_C -mips3
+            -I${CMAKE_SOURCE_DIR}/include/
+            -I${CMAKE_SOURCE_DIR}/include/libc/
+            -I${CMAKE_SOURCE_DIR}/src/
+            -I${CURRENT_BINARY_DIR}/
+            -I${CURRENT_BINARY_DIR}/include/
+            -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
+            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+            -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
+            -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
+            -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
+            -ffreestanding -fwrapv -Wall -Wextra -Werror
+            -o ${OBJECT_FILE}
+            ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
+        DEPENDS ${SOURCE_FILE}
+        COMMENT "Compiling ${CMAKE_SOURCE_DIR}/${SOURCE_FILE} -> ${OBJECT_FILE}"
+    )
+
+    # Append the object file to the list of object files
+    list(APPEND LIBULTRA_OBJECT_FILES ${OBJECT_FILE})
+    string(REPLACE "/" "_" TARGET_NAME "elf_${RELATIVE_PATH}/${FILE_NAME}")
+    add_custom_target(${TARGET_NAME} DEPENDS ${OBJECT_FILE})
+endforeach()
+
+#build/jp/lib/src/math/llmuldiv.o build/jp/lib/src/math/sinf.o build/jp/lib/src/math/llconv.o build/jp/lib/src/math/cosf.o
+#tools/patch_elf_32bit build/jp/libultra.a
+
+add_custom_command(
+    OUTPUT ${CURRENT_BINARY_DIR}/libultra.a
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}
+    # link
+    COMMAND mips-linux-gnu-ar
+            rcs -o ${CURRENT_BINARY_DIR}/libultra.a
+            ${LIBULTRA_OBJECT_FILES}
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/patch_elf_32bit ${CURRENT_BINARY_DIR}/libultra.a
+    DEPENDS ${LIBULTRA_OBJECT_FILES} patch_elf_32bit
+    COMMENT "Linking libultra"
+)
+
+add_custom_target(libultra ALL DEPENDS ${CURRENT_BINARY_DIR}/libultra.a)
 
 add_custom_target(armips_files)
 macro(armips_file INPUT_FILE OUTPUT_FILE)
@@ -2338,10 +2566,11 @@ add_custom_command(
     ${R_ELF_FILES}
     -o ${SM64_ELF}
     ${OBJECT_FILES}
+    # TODO
     build/jp/asm/boot.o build/jp/asm/decompress.o build/jp/asm/entry.o build/jp/asm/ipl3_font.o build/jp/asm/rom_header.o build/jp/assets/demo_data.o build/jp/assets/mario_anim_data.o build/jp/bin/cave.o build/jp/bin/debug_level_select.o build/jp/bin/effect.o build/jp/bin/fire.o build/jp/bin/generic.o build/jp/bin/grass.o build/jp/bin/inside.o build/jp/bin/machine.o build/jp/bin/mountain.o build/jp/bin/outside.o build/jp/bin/segment2.o build/jp/bin/sky.o build/jp/bin/snow.o build/jp/bin/spooky.o build/jp/bin/title_screen_bg.o build/jp/bin/water.o build/jp/lib/rsp.o
     -lultra -lgoddard -lgcc
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    DEPENDS ${SOURCE_FILE} goddard libgcc
+    DEPENDS ${SOURCE_FILE} goddard libgcc libultra
     COMMENT "Building sm64.${ROM_VERSION}.elf"
 )
 add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})

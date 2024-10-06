@@ -12,6 +12,10 @@ set(ARMIPS_SOURCES
     armips.cpp
 )
 
+set(PATCH_ELF_32BIT_SOURCES
+    patch_elf_32bit.c
+)
+
 set(TEXTCONV_HEADERS
     hashtable.h
     utf8.h
@@ -52,6 +56,7 @@ set(VADPCM_ENC_SOURCES
 
 # add executables -------------------------------------------------------------
 add_executable(armips ${ARMIPS_SOURCES})
+add_executable(patch_elf_32bit ${PATCH_ELF_32BIT_SOURCES})
 add_executable(textconv ${TEXTCONV_HEADERS} ${TEXTCONV_SOURCES})
 add_executable(skyconv ${SKYCONV_HEADERS} ${SKYCONV_SOURCES})
 add_executable(generate_level_header ${GENERATE_LEVEL_HEADER_SOURCES})
@@ -67,6 +72,16 @@ target_include_directories(armips
 target_compile_options(armips PRIVATE -std=c++11 -fno-exceptions -fno-rtti -pipe)
 target_compile_definitions(armips PRIVATE -DMIO0_STANDALONE)
 set_target_properties(armips PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+target_include_directories(patch_elf_32bit
+    PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
+)
+
+target_compile_options(patch_elf_32bit PRIVATE -Wall -Wextra -Wno-unused-parameter -pedantic -O2 -s)
+set_target_properties(patch_elf_32bit PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
@@ -112,6 +127,10 @@ target_link_libraries(armips
     pthread
 )
 
+target_link_libraries(patch_elf_32bit
+    PRIVATE
+)
+
 target_link_libraries(textconv
     PRIVATE
 )
@@ -135,4 +154,4 @@ target_link_libraries(vadpcm_enc
 # add subdirectories ----------------------------------------------------------
 add_subdirectory(sm64tools)
 
-add_custom_target(tools ALL DEPENDS textconv sm64tools skyconv aiff_extract_codebook vadpcm_enc)
+add_custom_target(tools ALL DEPENDS textconv patch_elf_32bit sm64tools skyconv aiff_extract_codebook vadpcm_enc)
