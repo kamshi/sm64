@@ -2274,13 +2274,13 @@ add_custom_target(link_elfs)
 macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
-    set(OBJECT_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.o)
-    set(DEPENDENCY_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.d)
-    set(OUTPUT_ELF ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf)
-    set(OUTPUT_BIN ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin)
-    set(OUTPUT_MIO0 ${OUTPUT_DIR}/${OUTPUT_FILENAME}.mio0)
+    set(OBJECT_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
+    set(DEPENDENCY_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.d)
+    set(OUTPUT_ELF ${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf)
+    set(OUTPUT_BIN ${RELATIVE_PATH}/${OUTPUT_FILENAME}.bin)
+    set(OUTPUT_MIO0 ${RELATIVE_PATH}/${OUTPUT_FILENAME}.mio0)
 
     get_filename_component(INPUT_FILE_EXT "${INPUT_FILE}" EXT)
 
@@ -2311,7 +2311,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             COMMAND ${CMAKE_LINKER}
                     -e 0
                     -Ttext=${TTEXT}
-                    -Map ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map
+                    -Map ${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf.map
                     -o ${OUTPUT_ELF}
                     ${OBJECT_FILE}  # Input object file
             # extract
@@ -2321,6 +2321,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             # to object file
             COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
             DEPENDS ${INPUT_FILE}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Compiling and linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
         )
     else()
@@ -2331,7 +2332,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             COMMAND ${CMAKE_LINKER}
                     -e 0
                     -Ttext=${TTEXT}
-                    -Map ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map
+                    -Map ${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf.map
                     -o ${OUTPUT_ELF}
                     ${OBJECT_FILE}  # Input object file
             # extract
@@ -2341,6 +2342,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             # to object file
             COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
             DEPENDS ${INPUT_FILE}
+            WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             COMMENT "Compiling and linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
         )
     endif()
@@ -2348,7 +2350,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
     list(APPEND ELF_FILES ${OUTPUT_ELF})
 
     # Create a custom target to link the ELF file
-    string(REPLACE "/" "_" TARGET_NAME "mio0${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "mio0_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_MIO0}.o)
     add_dependencies(${TARGET_NAME} mio0 elf_target)
     add_dependencies(link_elfs ${TARGET_NAME})
@@ -2357,13 +2359,13 @@ endmacro()
 macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
-    set(OBJECT_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.o)
-    set(DEPENDENCY_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.d)
-    set(OUTPUT_ELF ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf)
-    set(OUTPUT_BIN ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin)
-    set(OUTPUT_MIO0 ${OUTPUT_DIR}/${OUTPUT_FILENAME}.mio0)
+    set(OBJECT_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
+    set(DEPENDENCY_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.d)
+    set(OUTPUT_ELF ${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf)
+    set(OUTPUT_BIN ${RELATIVE_PATH}/${OUTPUT_FILENAME}.bin)
+    set(OUTPUT_MIO0 ${RELATIVE_PATH}/${OUTPUT_FILENAME}.mio0)
 
     add_custom_command(
         OUTPUT ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map ${OUTPUT_ELF} ${OUTPUT_BIN} ${OUTPUT_MIO0} ${OUTPUT_MIO0}.o
@@ -2372,7 +2374,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
         COMMAND ${CMAKE_LINKER}
                 -e 0
                 -Ttext=0x07000000 # TODO: make dependent of source file
-                -Map ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map
+                -Map ${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf.map
                 --just-symbols=${SYMBOLS_ELF}
                 -o ${OUTPUT_ELF}
                 ${OBJECT_FILE}  # Input object file
@@ -2383,6 +2385,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
         # to object file
         COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
         DEPENDS ${OBJECT_FILE}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
     )
 
@@ -2390,7 +2393,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
 
     # Create a custom target to link the ELF file
     #message(STATUS "mio0${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    string(REPLACE "/" "_" TARGET_NAME "mio0${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    string(REPLACE "/" "_" TARGET_NAME "mio0_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     #message(FATAL_ERROR "${TARGET_NAME}")
     add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_MIO0}.o)
     #add_dependencies(${OUTPUT_FILENAME} mio0 convert_textures) # TODO: slow
@@ -2476,39 +2479,39 @@ endforeach()
 
 # build/[eu/jp/sh/us]/levels/*/leveldata.o ----------------------------------------------
 set(LEVELDATA_OBJECT_FILES_TO_ELF_FILES
-    "${CURRENT_BINARY_DIR}/levels/bbh/leveldata.o#${CURRENT_BINARY_DIR}/bin/spooky.elf"
-    "${CURRENT_BINARY_DIR}/levels/bitdw/leveldata.o#${CURRENT_BINARY_DIR}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/bitfs/leveldata.o#${CURRENT_BINARY_DIR}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/bits/leveldata.o#${CURRENT_BINARY_DIR}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/bob/leveldata.o#${CURRENT_BINARY_DIR}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/bowser_1/leveldata.o#${CURRENT_BINARY_DIR}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/bowser_2/leveldata.o#${CURRENT_BINARY_DIR}/bin/fire.elf"
-    "${CURRENT_BINARY_DIR}/levels/bowser_3/leveldata.o#${CURRENT_BINARY_DIR}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/castle_courtyard/leveldata.o#${CURRENT_BINARY_DIR}/bin/outside.elf"
-    "${CURRENT_BINARY_DIR}/levels/castle_grounds/leveldata.o#${CURRENT_BINARY_DIR}/bin/outside.elf"
-    "${CURRENT_BINARY_DIR}/levels/castle_inside/leveldata.o#${CURRENT_BINARY_DIR}/bin/inside.elf"
-    "${CURRENT_BINARY_DIR}/levels/ccm/leveldata.o#${CURRENT_BINARY_DIR}/bin/snow.elf"
-    "${CURRENT_BINARY_DIR}/levels/cotmc/leveldata.o#${CURRENT_BINARY_DIR}/bin/cave.elf"
-    "${CURRENT_BINARY_DIR}/levels/ddd/leveldata.o#${CURRENT_BINARY_DIR}/bin/water.elf"
-    "${CURRENT_BINARY_DIR}/levels/ending/leveldata.o#${CURRENT_BINARY_DIR}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/hmc/leveldata.o#${CURRENT_BINARY_DIR}/bin/cave.elf"
-    "${CURRENT_BINARY_DIR}/levels/intro/leveldata.o#${CURRENT_BINARY_DIR}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/jrb/leveldata.o#${CURRENT_BINARY_DIR}/bin/water.elf"
-    "${CURRENT_BINARY_DIR}/levels/lll/leveldata.o#${CURRENT_BINARY_DIR}/bin/fire.elf"
-    "${CURRENT_BINARY_DIR}/levels/menu/leveldata.o#${CURRENT_BINARY_DIR}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/pss/leveldata.o#${CURRENT_BINARY_DIR}/bin/mountain.elf"
-    "${CURRENT_BINARY_DIR}/levels/rr/leveldata.o#${CURRENT_BINARY_DIR}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/sa/leveldata.o#${CURRENT_BINARY_DIR}/bin/inside.elf"
-    "${CURRENT_BINARY_DIR}/levels/sl/leveldata.o#${CURRENT_BINARY_DIR}/bin/snow.elf"
-    "${CURRENT_BINARY_DIR}/levels/ssl/leveldata.o#${CURRENT_BINARY_DIR}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/thi/leveldata.o#${CURRENT_BINARY_DIR}/bin/grass.elf"
-    "${CURRENT_BINARY_DIR}/levels/totwc/leveldata.o#${CURRENT_BINARY_DIR}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/ttc/leveldata.o#${CURRENT_BINARY_DIR}/bin/machine.elf"
-    "${CURRENT_BINARY_DIR}/levels/ttm/leveldata.o#${CURRENT_BINARY_DIR}/bin/mountain.elf"
-    "${CURRENT_BINARY_DIR}/levels/vcutm/leveldata.o#${CURRENT_BINARY_DIR}/bin/outside.elf"
-    "${CURRENT_BINARY_DIR}/levels/wdw/leveldata.o#${CURRENT_BINARY_DIR}/bin/grass.elf"
-    "${CURRENT_BINARY_DIR}/levels/wf/leveldata.o#${CURRENT_BINARY_DIR}/bin/grass.elf"
-    "${CURRENT_BINARY_DIR}/levels/wmotr/leveldata.o#${CURRENT_BINARY_DIR}/bin/generic.elf"
+    "${CURRENT_BINARY_DIR}/levels/bbh/leveldata.o#build/${ROM_VERSION}/bin/spooky.elf"
+    "${CURRENT_BINARY_DIR}/levels/bitdw/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${CURRENT_BINARY_DIR}/levels/bitfs/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${CURRENT_BINARY_DIR}/levels/bits/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${CURRENT_BINARY_DIR}/levels/bob/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${CURRENT_BINARY_DIR}/levels/bowser_1/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${CURRENT_BINARY_DIR}/levels/bowser_2/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
+    "${CURRENT_BINARY_DIR}/levels/bowser_3/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${CURRENT_BINARY_DIR}/levels/castle_courtyard/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${CURRENT_BINARY_DIR}/levels/castle_grounds/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${CURRENT_BINARY_DIR}/levels/castle_inside/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
+    "${CURRENT_BINARY_DIR}/levels/ccm/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
+    "${CURRENT_BINARY_DIR}/levels/cotmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
+    "${CURRENT_BINARY_DIR}/levels/ddd/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
+    "${CURRENT_BINARY_DIR}/levels/ending/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${CURRENT_BINARY_DIR}/levels/hmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
+    "${CURRENT_BINARY_DIR}/levels/intro/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${CURRENT_BINARY_DIR}/levels/jrb/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
+    "${CURRENT_BINARY_DIR}/levels/lll/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
+    "${CURRENT_BINARY_DIR}/levels/menu/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${CURRENT_BINARY_DIR}/levels/pss/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
+    "${CURRENT_BINARY_DIR}/levels/rr/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${CURRENT_BINARY_DIR}/levels/sa/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
+    "${CURRENT_BINARY_DIR}/levels/sl/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
+    "${CURRENT_BINARY_DIR}/levels/ssl/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${CURRENT_BINARY_DIR}/levels/thi/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${CURRENT_BINARY_DIR}/levels/totwc/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${CURRENT_BINARY_DIR}/levels/ttc/leveldata.o#build/${ROM_VERSION}/bin/machine.elf"
+    "${CURRENT_BINARY_DIR}/levels/ttm/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
+    "${CURRENT_BINARY_DIR}/levels/vcutm/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${CURRENT_BINARY_DIR}/levels/wdw/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${CURRENT_BINARY_DIR}/levels/wf/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${CURRENT_BINARY_DIR}/levels/wmotr/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
 )
 
 foreach(OBJECT_TO_ELF_FILE ${LEVELDATA_OBJECT_FILES_TO_ELF_FILES})
