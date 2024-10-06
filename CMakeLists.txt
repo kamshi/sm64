@@ -2611,6 +2611,7 @@ endforeach()
 
 # add executable --------------------------------------------------------------
 set(SM64_ELF ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.elf)
+string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_SM64_ELF "${SM64_ELF}")
 
 set(R_ELF_FILES)
 foreach(ELF_FILE ${ELF_FILES})
@@ -2626,14 +2627,14 @@ endforeach()
 add_custom_command(
     OUTPUT ${SM64_ELF}
     COMMAND ${CMAKE_LINKER}
-    -L${ABSOLUTE_BUILD_DIR}
+    -L${RELATIVE_BUILD_DIR}
     #-L${CMAKE_SOURCE_DIR}
     -T ${CMAKE_SOURCE_DIR}/undefined_syms.txt
-    -T ${ABSOLUTE_BUILD_DIR}/sm64.ld
-    -Map ${ABSOLUTE_BUILD_DIR}/sm64.jp.map
+    -T ${RELATIVE_BUILD_DIR}/sm64.ld
+    -Map ${RELATIVE_BUILD_DIR}/sm64.jp.map
     --no-check-sections
     ${R_ELF_FILES}
-    -o ${SM64_ELF}
+    -o ${RELATIVE_SM64_ELF}
     ${RELATIVE_OBJECT_FILES}
     # TODO
     build/jp/asm/boot.o build/jp/asm/decompress.o build/jp/asm/entry.o build/jp/asm/ipl3_font.o build/jp/asm/rom_header.o build/jp/assets/demo_data.o build/jp/assets/mario_anim_data.o build/jp/bin/cave.o build/jp/bin/debug_level_select.o build/jp/bin/effect.o build/jp/bin/fire.o build/jp/bin/generic.o build/jp/bin/grass.o build/jp/bin/inside.o build/jp/bin/machine.o build/jp/bin/mountain.o build/jp/bin/outside.o build/jp/bin/segment2.o build/jp/bin/sky.o build/jp/bin/snow.o build/jp/bin/spooky.o build/jp/bin/title_screen_bg.o build/jp/bin/water.o build/jp/lib/rsp.o
