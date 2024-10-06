@@ -157,7 +157,6 @@ add_custom_command(
     DEPENDS ${CMAKE_SOURCE_DIR}/extract_assets.py
     COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/extract_assets.py..."
 )
-add_custom_target(extract_assets ALL DEPENDS ${CMAKE_SOURCE_DIR}/actors/blue_coin_switch/blue_coin_switch_side.rgba16.png)
 
 set(CHARMAP charmap.txt)
 add_custom_command(
@@ -718,7 +717,7 @@ macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
                 -g ${INPUT_FILE}
                 -f ia1
         #DEPENDS ${INPUT_FILE}
-        DEPENDS extract_assets
+        #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -741,7 +740,7 @@ macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
                 -g ${INPUT_FILE}
                 -f ia1
         #DEPENDS ${INPUT_FILE}
-        DEPENDS extract_assets
+        #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -764,7 +763,7 @@ macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
                 -g ${INPUT_FILE}
                 -f ia1
         #DEPENDS ${INPUT_FILE}
-        DEPENDS extract_assets
+        #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -787,7 +786,7 @@ macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
                 -g ${INPUT_FILE}
                 -f ia4
         #DEPENDS ${INPUT_FILE}
-        DEPENDS extract_assets
+        #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -805,7 +804,7 @@ macro(convert_texture_ia8 INPUT_FILE OUTPUT_FILE)
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64graphics -s u8 -i ${OUTPUT_FILE}.inc.c -g ${INPUT_FILE} -f ia8
         #DEPENDS ${INPUT_FILE}
-        DEPENDS extract_assets
+        #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -828,7 +827,7 @@ macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
                 -g ${INPUT_FILE}
                 -f ia16
         #DEPENDS ${INPUT_FILE}
-        DEPENDS extract_assets
+        #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -851,7 +850,7 @@ macro(convert_texture_rgba16 INPUT_FILE OUTPUT_FILE)
                 -g ${INPUT_FILE}
                 -f rgba16
         #DEPENDS ${INPUT_FILE}
-        DEPENDS extract_assets
+        #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -1058,7 +1057,8 @@ macro(convert_skybox INPUT_FILE OUTPUT_FILE)
         --type sky
         --split ${INPUT_FILE}
         ${OUTPUT_DIR}
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        #DEPENDS extract_assets
         COMMENT "Converting skybox: ${INPUT_FILE} -> ${OUTPUT_FILE}"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_skybox${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -1095,7 +1095,8 @@ macro(convert_cake INPUT_FILE OUTPUT_FILE)
         --type cake
         --split ${INPUT_FILE}
         ${OUTPUT_DIR}
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        #DEPENDS extract_assets
         COMMENT "Converting cake: ${INPUT_FILE} -> ${OUTPUT_FILE}"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_cake${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -1977,60 +1978,70 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
 
     # check if the given file is a c file, if it is, compile it
     if(${INPUT_FILE_EXT} STREQUAL ".c")
-
-    add_custom_command(
-        OUTPUT ${OBJECT_FILE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        # compile
-        COMMAND ${CMAKE_C_COMPILER}
-            -c ${INPUT_FILE}
-            -o ${OBJECT_FILE}
-            -MMD -MF ${DEPENDENCY_FILE}
-            -G 0 -O2 -nostdinc -DTARGET_N64 -D_LANGUAGE_C -mips3
-            -I${CMAKE_SOURCE_DIR}/include
-            -I${CMAKE_SOURCE_DIR}/include/libc
-            -I${CMAKE_SOURCE_DIR}/src
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/bin
-            -I${CURRENT_BINARY_DIR}/include
-            -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
-            -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
-            -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
-            -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
-            -ffreestanding -fwrapv -Wall -Wextra -Werror
+        add_custom_command(
+            OUTPUT ${OBJECT_FILE} ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map ${OUTPUT_ELF} ${OUTPUT_MIO0} ${OUTPUT_MIO0}.o
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+            # compile
+            COMMAND ${CMAKE_C_COMPILER}
+                -c ${INPUT_FILE}
+                -o ${OBJECT_FILE}
+                -MMD -MF ${DEPENDENCY_FILE}
+                -G 0 -O2 -nostdinc -DTARGET_N64 -D_LANGUAGE_C -mips3
+                -I${CMAKE_SOURCE_DIR}/include
+                -I${CMAKE_SOURCE_DIR}/include/libc
+                -I${CMAKE_SOURCE_DIR}/src
+                -I${CURRENT_BINARY_DIR}
+                -I${CURRENT_BINARY_DIR}/bin
+                -I${CURRENT_BINARY_DIR}/include
+                -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
+                -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+                -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
+                -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
+                -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
+                -ffreestanding -fwrapv -Wall -Wextra -Werror
+            # link
+            COMMAND ${CMAKE_LINKER}
+                    -e 0
+                    -Ttext=${TTEXT}
+                    -Map ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map
+                    -o ${OUTPUT_ELF}
+                    ${OBJECT_FILE}  # Input object file
+            # extract
+            COMMAND mips-linux-gnu-objcopy -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
+            # compress
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/mio0 ${OUTPUT_BIN} ${OUTPUT_MIO0}
+            # to object file
+            COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
             DEPENDS ${INPUT_FILE}
-            COMMENT "Compiling ${INPUT_FILE} -> ${OBJECT_FILE}"
+            COMMENT "Compiling and linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+        )
+    else()
+        add_custom_command(
+            OUTPUT ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map ${OUTPUT_ELF} ${OUTPUT_MIO0} ${OUTPUT_MIO0}.o
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+            # link
+            COMMAND ${CMAKE_LINKER}
+                    -e 0
+                    -Ttext=${TTEXT}
+                    -Map ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map
+                    -o ${OUTPUT_ELF}
+                    ${OBJECT_FILE}  # Input object file
+            # extract
+            COMMAND mips-linux-gnu-objcopy -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
+            # compress
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/mio0 ${OUTPUT_BIN} ${OUTPUT_MIO0}
+            # to object file
+            COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
+            DEPENDS ${INPUT_FILE}
+            COMMENT "Compiling and linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
         )
     endif()
-    add_custom_command(
-        OUTPUT ${OUTPUT_MIO0}.o
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        # link
-        COMMAND ${CMAKE_LINKER}
-                -e 0
-                -Ttext=${TTEXT}
-                -Map ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map
-                -o ${OUTPUT_ELF}
-                ${OBJECT_FILE}  # Input object file
-        # extract
-        COMMAND mips-linux-gnu-objcopy -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
-        # compress
-        COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/mio0 ${OUTPUT_BIN} ${OUTPUT_MIO0}
-        # to object file
-        COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
-        DEPENDS ${OBJECT_FILE}
-        COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
-    )
 
     list(APPEND ELF_FILES ${OUTPUT_ELF})
 
     # Create a custom target to link the ELF file
-    #message(STATUS "mio0${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     string(REPLACE "/" "_" TARGET_NAME "mio0${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    #message(FATAL_ERROR "${TARGET_NAME}")
     add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_MIO0}.o)
-    #add_dependencies(${OUTPUT_FILENAME} mio0 convert_textures) # TODO: slow
     add_dependencies(${TARGET_NAME} mio0 elf_target)
     add_dependencies(link_elfs ${TARGET_NAME})
 endmacro()
@@ -2047,7 +2058,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
     set(OUTPUT_MIO0 ${OUTPUT_DIR}/${OUTPUT_FILENAME}.mio0)
 
     add_custom_command(
-        OUTPUT ${OUTPUT_MIO0}.o
+        OUTPUT ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map ${OUTPUT_ELF} ${OUTPUT_BIN} ${OUTPUT_MIO0} ${OUTPUT_MIO0}.o
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         # link
         COMMAND ${CMAKE_LINKER}
@@ -2153,7 +2164,6 @@ foreach(OBJECT_TO_ELF_FILE ${ACTORS_OBJECT_FILES_TO_ELF_FILES})
     get_filename_component(OUTPUT_FILENAME "${OBJECT_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
     mio_file(${OBJECT_FILE} "${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
-    #mio_file(${OBJECT_FILE} ${CURRENT_BINARY_DIR}/actors/${OUTPUT_FILENAME}.elf)
 endforeach()
 
 # build/[eu/jp/sh/us]/levels/*/leveldata.o ----------------------------------------------
@@ -2225,7 +2235,7 @@ foreach(SOURCE_FILE_TO_ELF ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
     get_filename_component(OUTPUT_DIR "${SOURCE_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${SOURCE_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    mio_file(${OBJECT_FILE} "${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
+    mio_file(${SOURCE_FILE} "${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
 endforeach()
 
 # add executable --------------------------------------------------------------
