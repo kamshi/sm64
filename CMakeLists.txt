@@ -39,7 +39,8 @@ elseif(${ROM_VERSION} STREQUAL "sh")
     set(ROM_VERSION_STRING "VERSION_SH")
 endif()
 
-set(CURRENT_BINARY_DIR ${CMAKE_SOURCE_DIR}/build/${ROM_VERSION})
++set(RELATIVE_BUILD_DIR build/${ROM_VERSION})
++set(ABSOLUTE_BUILD_DIR ${RELATIVE_BUILD_DIR})
 
 # set global compiler flags ---------------------------------------------------
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
@@ -67,15 +68,15 @@ get_filename_component(COMPILER_DIR ${CMAKE_C_COMPILER} DIRECTORY)
 message(STATUS "Compiler directory: ${COMPILER_DIR}")
 
 # where executables will be built
-set(RUNTIME_OUTPUT_DIRECTORY ${CURRENT_BINARY_DIR})
+set(RUNTIME_OUTPUT_DIRECTORY ${ABSOLUTE_BUILD_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${RUNTIME_OUTPUT_DIRECTORY})
 
 # where shared libraries will be built
-set(LIBRARY_OUTPUT_DIRECTORY ${CURRENT_BINARY_DIR})
+set(LIBRARY_OUTPUT_DIRECTORY ${ABSOLUTE_BUILD_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_DIRECTORY})
 
 # where static libraries will be built
-set(ARCHIVE_OUTPUT_DIRECTORY ${CURRENT_BINARY_DIR})
+set(ARCHIVE_OUTPUT_DIRECTORY ${ABSOLUTE_BUILD_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ARCHIVE_OUTPUT_DIRECTORY})
 
 # TODO
@@ -160,96 +161,96 @@ add_custom_command(
 
 set(CHARMAP charmap.txt)
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/${CHARMAP}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/${CHARMAP}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/
     COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
             -I${CMAKE_SOURCE_DIR}/include
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/include
+            -I${ABSOLUTE_BUILD_DIR}
+            -I${ABSOLUTE_BUILD_DIR}/include
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
             ${SM64_COMPILE_DEFINITIONS}
-            -DBUILD_DIR=${CURRENT_BINARY_DIR}
-            -MMD -MP -MT ${CURRENT_BINARY_DIR}/${CHARMAP}
-            -MF ${CURRENT_BINARY_DIR}/${CHARMAP}.d
-            -o ${CURRENT_BINARY_DIR}/${CHARMAP}
+            -DBUILD_DIR=${ABSOLUTE_BUILD_DIR}
+            -MMD -MP -MT ${ABSOLUTE_BUILD_DIR}/${CHARMAP}
+            -MF ${ABSOLUTE_BUILD_DIR}/${CHARMAP}.d
+            -o ${ABSOLUTE_BUILD_DIR}/${CHARMAP}
             ${CMAKE_SOURCE_DIR}/${CHARMAP}
     DEPENDS ${CMAKE_SOURCE_DIR}/${CHARMAP}
     COMMENT "Preprocessing charmap: ${CHARMAP}"
 )
-add_custom_target(preprocess_charmap ALL DEPENDS ${CURRENT_BINARY_DIR}/${CHARMAP})
+add_custom_target(preprocess_charmap ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/${CHARMAP})
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/charmap.debug.txt
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/charmap.debug.txt
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/
     COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
             -I${CMAKE_SOURCE_DIR}/include
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/include
+            -I${ABSOLUTE_BUILD_DIR}
+            -I${ABSOLUTE_BUILD_DIR}/include
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
             ${SM64_COMPILE_DEFINITIONS}
-            -DBUILD_DIR=${CURRENT_BINARY_DIR}
-            -MMD -MP -MT ${CURRENT_BINARY_DIR}/charmap.debug.txt
-            -MF ${CURRENT_BINARY_DIR}/charmap.debug.txt.d
-            -o ${CURRENT_BINARY_DIR}/charmap.debug.txt
+            -DBUILD_DIR=${ABSOLUTE_BUILD_DIR}
+            -MMD -MP -MT ${ABSOLUTE_BUILD_DIR}/charmap.debug.txt
+            -MF ${ABSOLUTE_BUILD_DIR}/charmap.debug.txt.d
+            -o ${ABSOLUTE_BUILD_DIR}/charmap.debug.txt
             ${CMAKE_SOURCE_DIR}/${CHARMAP}
     DEPENDS ${CMAKE_SOURCE_DIR}/${CHARMAP}
     COMMENT "Preprocessing charmap: charmap.debug.txt"
 )
-add_custom_target(preprocess_charmap_debug ALL DEPENDS ${CURRENT_BINARY_DIR}/charmap.debug.txt)
+add_custom_target(preprocess_charmap_debug ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/charmap.debug.txt)
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/text/${ROM_VERSION}/define_text.inc.c
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/text/${ROM_VERSION}/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/text/${ROM_VERSION}/define_text.inc.c
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/text/${ROM_VERSION}/
     COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
             -I${CMAKE_SOURCE_DIR}/include
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/include
+            -I${ABSOLUTE_BUILD_DIR}
+            -I${ABSOLUTE_BUILD_DIR}/include
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
             ${SM64_COMPILE_DEFINITIONS}
-            ${CMAKE_SOURCE_DIR}/text/define_text.inc.c -o ${CURRENT_BINARY_DIR}/define_text.inc.c.temp -I ${CMAKE_SOURCE_DIR}/text/${ROM_VERSION}/
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${CURRENT_BINARY_DIR}/${CHARMAP} ${CURRENT_BINARY_DIR}/define_text.inc.c.temp ${CURRENT_BINARY_DIR}/text/${ROM_VERSION}/define_text.inc.c
+            ${CMAKE_SOURCE_DIR}/text/define_text.inc.c -o ${ABSOLUTE_BUILD_DIR}/define_text.inc.c.temp -I ${CMAKE_SOURCE_DIR}/text/${ROM_VERSION}/
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${ABSOLUTE_BUILD_DIR}/${CHARMAP} ${ABSOLUTE_BUILD_DIR}/define_text.inc.c.temp ${ABSOLUTE_BUILD_DIR}/text/${ROM_VERSION}/define_text.inc.c
     DEPENDS ${CMAKE_SOURCE_DIR}/text/define_text.inc.c textconv
     COMMENT "Preprocessing define_text.inc.c"
 )
-add_custom_target(preprocess_define_text.inc.c ALL DEPENDS ${CURRENT_BINARY_DIR}/text/${ROM_VERSION}/define_text.inc.c)
+add_custom_target(preprocess_define_text.inc.c ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/text/${ROM_VERSION}/define_text.inc.c)
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/text/debug_text.raw.inc.c
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/text/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/text/debug_text.raw.inc.c
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/text/
     COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
             -I${CMAKE_SOURCE_DIR}/include
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/include
+            -I${ABSOLUTE_BUILD_DIR}
+            -I${ABSOLUTE_BUILD_DIR}/include
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
             ${SM64_COMPILE_DEFINITIONS}
-            ${CMAKE_SOURCE_DIR}/text/debug_text.inc.c -o ${CURRENT_BINARY_DIR}/debug_text.inc.c.temp -I ${CMAKE_SOURCE_DIR}/text/
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${CURRENT_BINARY_DIR}/charmap.debug.txt ${CURRENT_BINARY_DIR}/debug_text.inc.c.temp ${CURRENT_BINARY_DIR}/text/debug_text.raw.inc.c
+            ${CMAKE_SOURCE_DIR}/text/debug_text.inc.c -o ${ABSOLUTE_BUILD_DIR}/debug_text.inc.c.temp -I ${CMAKE_SOURCE_DIR}/text/
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${ABSOLUTE_BUILD_DIR}/charmap.debug.txt ${ABSOLUTE_BUILD_DIR}/debug_text.inc.c.temp ${ABSOLUTE_BUILD_DIR}/text/debug_text.raw.inc.c
     DEPENDS ${CMAKE_SOURCE_DIR}/text/debug_text.inc.c textconv
     COMMENT "Preprocessing debug_text.inc.c"
 )
-add_custom_target(preprocess_debug_text.inc.c ALL DEPENDS ${CURRENT_BINARY_DIR}/text/debug_text.raw.inc.c)
+add_custom_target(preprocess_debug_text.inc.c ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/text/debug_text.raw.inc.c)
 
 set(LEVEL_RULES_MK levels/level_rules.mk)
 add_custom_command(
     OUTPUT ${CMAKE_SOURCE_DIR}/level_rules.mk
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/
     COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
             -I${CMAKE_SOURCE_DIR}/include
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/include
+            -I${ABSOLUTE_BUILD_DIR}
+            -I${ABSOLUTE_BUILD_DIR}/include
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
             ${SM64_COMPILE_DEFINITIONS}
-            -o ${CURRENT_BINARY_DIR}/level_rules.mk
+            -o ${ABSOLUTE_BUILD_DIR}/level_rules.mk
             ${CMAKE_SOURCE_DIR}/${LEVEL_RULES_MK}
     DEPENDS ${CMAKE_SOURCE_DIR}/${LEVEL_RULES_MK}
     COMMENT "Preprocessing level rules: ${LEVEL_RULES_MK}"
@@ -258,70 +259,70 @@ add_custom_target(preprocess_level_rules ALL DEPENDS ${CMAKE_SOURCE_DIR}/level_r
 
 set(LEVEL_RULES_MK levels/level_rules.mk)
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/sm64.ld
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.ld
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/
     COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
             -I${CMAKE_SOURCE_DIR}/include
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/include
+            -I${ABSOLUTE_BUILD_DIR}
+            -I${ABSOLUTE_BUILD_DIR}/include
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
             ${SM64_COMPILE_DEFINITIONS}
             -DBUILD_DIR=build/${ROM_VERSION}
-            -MMD -MP -MT ${CURRENT_BINARY_DIR}/sm64.ld
-            -MF ${CURRENT_BINARY_DIR}/sm64.ld.d
-            -o ${CURRENT_BINARY_DIR}/sm64.ld
+            -MMD -MP -MT ${ABSOLUTE_BUILD_DIR}/sm64.ld
+            -MF ${ABSOLUTE_BUILD_DIR}/sm64.ld.d
+            -o ${ABSOLUTE_BUILD_DIR}/sm64.ld
             ${CMAKE_SOURCE_DIR}/sm64.ld
     DEPENDS ${CMAKE_SOURCE_DIR}/${LEVEL_RULES_MK}
     COMMENT "Preprocessing sm64.ld"
 )
-add_custom_target(preprocess_sm64.ld ALL DEPENDS ${CURRENT_BINARY_DIR}/sm64.ld)
+add_custom_target(preprocess_sm64.ld ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.ld)
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/level_headers.h.temp
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/level_headers.h.temp
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/
     COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
             -I${CMAKE_SOURCE_DIR}/include
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/include
+            -I${ABSOLUTE_BUILD_DIR}
+            -I${ABSOLUTE_BUILD_DIR}/include
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
             ${SM64_COMPILE_DEFINITIONS}
-            ${CMAKE_SOURCE_DIR}/levels/level_headers.h.in > ${CURRENT_BINARY_DIR}/level_headers.h.temp
+            ${CMAKE_SOURCE_DIR}/levels/level_headers.h.in > ${ABSOLUTE_BUILD_DIR}/level_headers.h.temp
     DEPENDS ${CMAKE_SOURCE_DIR}/levels/level_headers.h.in
     COMMENT "Preprocessing level headers: levels/level_headers.h.in"
 )
-add_custom_target(preprocess_level_headers_temp ALL DEPENDS ${CURRENT_BINARY_DIR}/level_headers.h.temp)
+add_custom_target(preprocess_level_headers_temp ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/level_headers.h.temp)
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/include/level_headers.h
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/include/
-    COMMAND $<TARGET_FILE:generate_level_header> ${CURRENT_BINARY_DIR}/level_headers.h.temp ${CURRENT_BINARY_DIR}/include/level_headers.h
-    DEPENDS ${CURRENT_BINARY_DIR}/level_headers.h.temp generate_level_header
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/include/level_headers.h
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/include/
+    COMMAND $<TARGET_FILE:generate_level_header> ${ABSOLUTE_BUILD_DIR}/level_headers.h.temp ${ABSOLUTE_BUILD_DIR}/include/level_headers.h
+    DEPENDS ${ABSOLUTE_BUILD_DIR}/level_headers.h.temp generate_level_header
     COMMENT "Generating level_headers.h from ${TEMP_FILE} using generate_level_header..."
 )
-add_custom_target(generate_level_headers ALL DEPENDS ${CURRENT_BINARY_DIR}/include/level_headers.h)
+add_custom_target(generate_level_headers ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/include/level_headers.h)
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/include/text_strings.h
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/include/
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${CURRENT_BINARY_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_strings.h.in ${CURRENT_BINARY_DIR}/include/text_strings.h
-    DEPENDS ${CURRENT_BINARY_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_strings.h.in textconv
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/include/text_strings.h
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/include/
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${ABSOLUTE_BUILD_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_strings.h.in ${ABSOLUTE_BUILD_DIR}/include/text_strings.h
+    DEPENDS ${ABSOLUTE_BUILD_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_strings.h.in textconv
     COMMENT "Generating text_strings.h from textconv..."
 )
-add_custom_target(generate_text_strings ALL DEPENDS ${CURRENT_BINARY_DIR}/include/text_strings.h)
+add_custom_target(generate_text_strings ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/include/text_strings.h)
 add_dependencies(generate_text_strings textconv)
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/include/text_menu_strings.h
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/include/
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${CURRENT_BINARY_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_menu_strings.h.in ${CURRENT_BINARY_DIR}/include/text_menu_strings.h
-    DEPENDS ${CURRENT_BINARY_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_menu_strings.h.in textconv
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/include/text_menu_strings.h
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/include/
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${ABSOLUTE_BUILD_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_menu_strings.h.in ${ABSOLUTE_BUILD_DIR}/include/text_menu_strings.h
+    DEPENDS ${ABSOLUTE_BUILD_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_menu_strings.h.in textconv
     COMMENT "Generating text_strings.h from textconv..."
 )
-add_custom_target(generate_text_menu_strings ALL DEPENDS ${CURRENT_BINARY_DIR}/include/text_menu_strings.h)
+add_custom_target(generate_text_menu_strings ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/include/text_menu_strings.h)
 add_dependencies(generate_text_menu_strings textconv)
 
 # run assembler ---------------------------------------------------------------
@@ -335,8 +336,8 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
                 -I${CMAKE_SOURCE_DIR}/include
-                -I${CURRENT_BINARY_DIR}
-                -I${CURRENT_BINARY_DIR}/include
+                -I${ABSOLUTE_BUILD_DIR}
+                -I${ABSOLUTE_BUILD_DIR}/include
                 -I${CMAKE_SOURCE_DIR}/src
                 -I${CMAKE_SOURCE_DIR}
                 -I${CMAKE_SOURCE_DIR}/include/libc
@@ -351,8 +352,8 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
         COMMAND mips-linux-gnu-as
                 -march=vr4300 -mabi=32
                 -I${CMAKE_SOURCE_DIR}/include
-                -I${CURRENT_BINARY_DIR}
-                -I${CURRENT_BINARY_DIR}/include
+                -I${ABSOLUTE_BUILD_DIR}
+                -I${ABSOLUTE_BUILD_DIR}/include
                 -I${CMAKE_SOURCE_DIR}/src
                 -I${CMAKE_SOURCE_DIR}
                 -I${CMAKE_SOURCE_DIR}/include/libc
@@ -378,7 +379,7 @@ foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    assemble_file(${ASSEMBLY_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
+    assemble_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
 
 add_custom_target(assemble_libultra)
@@ -392,8 +393,8 @@ macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY
                 -I${CMAKE_SOURCE_DIR}/include
-                -I${CURRENT_BINARY_DIR}
-                -I${CURRENT_BINARY_DIR}/include
+                -I${ABSOLUTE_BUILD_DIR}
+                -I${ABSOLUTE_BUILD_DIR}/include
                 -I${CMAKE_SOURCE_DIR}/src
                 -I${CMAKE_SOURCE_DIR}
                 -I${CMAKE_SOURCE_DIR}/include/libc
@@ -408,8 +409,8 @@ macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
         COMMAND mips-linux-gnu-as
                 -march=vr4300 -mabi=32
                 -I${CMAKE_SOURCE_DIR}/include
-                -I${CURRENT_BINARY_DIR}
-                -I${CURRENT_BINARY_DIR}/include
+                -I${ABSOLUTE_BUILD_DIR}
+                -I${ABSOLUTE_BUILD_DIR}/include
                 -I${CMAKE_SOURCE_DIR}/src
                 -I${CMAKE_SOURCE_DIR}
                 -I${CMAKE_SOURCE_DIR}/include/libc
@@ -436,7 +437,7 @@ foreach(ASSEMBLY_FILE ${LIB_ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    assemble_libultra_file(${ASSEMBLY_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
+    assemble_libultra_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
 
 set(LIBULTRA_SOURCE_FILES
@@ -553,13 +554,13 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
-    set(OBJECT_FILE ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
-    set(DEPENDENCY_FILE ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
+    set(OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(DEPENDENCY_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
 
     # Add a custom command to compile the source file
     add_custom_command(
         OUTPUT ${OBJECT_FILE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
         COMMAND gcc
             -fsyntax-only -fsigned-char -fno-builtin -nostdinc
             -DTARGET_N64 -D_LANGUAGE_C -std=gnu90
@@ -568,8 +569,8 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${CURRENT_BINARY_DIR}/
-            -I${CURRENT_BINARY_DIR}/include/
+            -I${ABSOLUTE_BUILD_DIR}/
+            -I${ABSOLUTE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -m32 -MMD -MP -MT ${OBJECT_FILE}
@@ -581,8 +582,8 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${CURRENT_BINARY_DIR}/
-            -I${CURRENT_BINARY_DIR}/include/
+            -I${ABSOLUTE_BUILD_DIR}/
+            -I${ABSOLUTE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
@@ -605,18 +606,18 @@ endforeach()
 #tools/patch_elf_32bit build/jp/libultra.a
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/libultra.a
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/libultra.a
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # link
     COMMAND mips-linux-gnu-ar
-            rcs -o ${CURRENT_BINARY_DIR}/libultra.a
+            rcs -o ${ABSOLUTE_BUILD_DIR}/libultra.a
             ${LIBULTRA_OBJECT_FILES}
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/patch_elf_32bit ${CURRENT_BINARY_DIR}/libultra.a
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/patch_elf_32bit ${ABSOLUTE_BUILD_DIR}/libultra.a
     DEPENDS ${LIBULTRA_OBJECT_FILES} patch_elf_32bit
     COMMENT "Linking libultra"
 )
 
-add_custom_target(libultra ALL DEPENDS ${CURRENT_BINARY_DIR}/libultra.a)
+add_custom_target(libultra ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/libultra.a)
 
 add_custom_target(armips_files)
 macro(armips_file INPUT_FILE OUTPUT_FILE)
@@ -652,25 +653,25 @@ foreach(ASSEMBLY_FILE ${RSP_ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    armips_file(${ASSEMBLY_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    armips_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
 endforeach()
 
-assemble_file("${CMAKE_SOURCE_DIR}/lib/rsp.s" "${CURRENT_BINARY_DIR}/lib/rsp.o")
+assemble_file("${CMAKE_SOURCE_DIR}/lib/rsp.s" "${ABSOLUTE_BUILD_DIR}/lib/rsp.o")
 
 # convert animations ----------------------------------------------------------
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/assets/mario_anim_data.o
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/assets/
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/mario_anims_converter.py > ${CURRENT_BINARY_DIR}/assets/mario_anim_data.c
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/assets/mario_anim_data.o
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/assets/
+    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/mario_anims_converter.py > ${ABSOLUTE_BUILD_DIR}/assets/mario_anim_data.c
     COMMAND ${CMAKE_C_COMPILER}
-        -o ${CURRENT_BINARY_DIR}/assets/mario_anim_data.o
-        -MMD -MF ${CURRENT_BINARY_DIR}/assets/mario_anim_data.d
+        -o ${ABSOLUTE_BUILD_DIR}/assets/mario_anim_data.o
+        -MMD -MF ${ABSOLUTE_BUILD_DIR}/assets/mario_anim_data.d
         -c -G 0 -O2 -nostdinc -DTARGET_N64 -D_LANGUAGE_C -mips3
         -I${CMAKE_SOURCE_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/include/libc/
         -I${CMAKE_SOURCE_DIR}/src/
-        -I${CURRENT_BINARY_DIR}/
-        -I${CURRENT_BINARY_DIR}/include/
+        -I${ABSOLUTE_BUILD_DIR}/
+        -I${ABSOLUTE_BUILD_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
         -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1
         -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -mno-shared
@@ -678,17 +679,17 @@ add_custom_command(
         -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
         -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
         -ffreestanding -fwrapv -Wall -Wextra -Werror
-        ${CURRENT_BINARY_DIR}/assets/mario_anim_data.c
+        ${ABSOLUTE_BUILD_DIR}/assets/mario_anim_data.c
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS ${CMAKE_SOURCE_DIR}/tools/mario_anims_converter.py
     COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/tools/mario_anims_converter.py..."
 )
-add_custom_target(convert_mario_animations ALL DEPENDS ${CURRENT_BINARY_DIR}/assets/mario_anim_data.o)
+add_custom_target(convert_mario_animations ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/assets/mario_anim_data.o)
 
 # convert demo data -----------------------------------------------------------
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/assets/demo_data.o
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/assets/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/assets/demo_data.o
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/assets/
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/demo_data_converter.py
         assets/demo_data.json
         -Iinclude
@@ -699,16 +700,16 @@ add_custom_command(
         -Iinclude/libc
         -D${ROM_VERSION_STRING}=1
         -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 # TODO
-        > ${CURRENT_BINARY_DIR}/assets/demo_data.c
+        > ${ABSOLUTE_BUILD_DIR}/assets/demo_data.c
     COMMAND ${CMAKE_C_COMPILER}
-        -o ${CURRENT_BINARY_DIR}/assets/demo_data.o
-        -MMD -MF ${CURRENT_BINARY_DIR}/assets/demo_data.d
+        -o ${ABSOLUTE_BUILD_DIR}/assets/demo_data.o
+        -MMD -MF ${ABSOLUTE_BUILD_DIR}/assets/demo_data.d
         -c -G 0 -O2 -nostdinc -DTARGET_N64 -D_LANGUAGE_C -mips3
         -I${CMAKE_SOURCE_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/include/libc/
         -I${CMAKE_SOURCE_DIR}/src/
-        -I${CURRENT_BINARY_DIR}/
-        -I${CURRENT_BINARY_DIR}/include/
+        -I${ABSOLUTE_BUILD_DIR}/
+        -I${ABSOLUTE_BUILD_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
         -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1
         -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -mno-shared
@@ -716,27 +717,27 @@ add_custom_command(
         -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
         -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
         -ffreestanding -fwrapv -Wall -Wextra -Werror
-        ${CURRENT_BINARY_DIR}/assets/demo_data.c
+        ${ABSOLUTE_BUILD_DIR}/assets/demo_data.c
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS ${CMAKE_SOURCE_DIR}/tools/demo_data_converter.py
     COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/tools/demo_data_converter.py..."
 )
-add_custom_target(convert_demo_data ALL DEPENDS ${CURRENT_BINARY_DIR}/assets/demo_data.o)
+add_custom_target(convert_demo_data ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/assets/demo_data.o)
 
 # convert sounds --------------------------------------------------------------
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/endian-and-bitwidth
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/assets/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/assets/
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/capture_output.py
-        ${CURRENT_BINARY_DIR}/endian-and-bitwidth.dummy1
+        ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth.dummy1
         ${CMAKE_C_COMPILER}
-        -o ${CURRENT_BINARY_DIR}/endian-and-bitwidth.dummy2
+        -o ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth.dummy2
         -c -G 0 -O2 -nostdinc -DTARGET_N64 -D_LANGUAGE_C -mips3
         -I${CMAKE_SOURCE_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/include/libc/
         -I${CMAKE_SOURCE_DIR}/src/
-        -I${CURRENT_BINARY_DIR}/
-        -I${CURRENT_BINARY_DIR}/include/
+        -I${ABSOLUTE_BUILD_DIR}/
+        -I${ABSOLUTE_BUILD_DIR}/include/
         -I${CMAKE_SOURCE_DIR}/
         -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1
         -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -mno-shared
@@ -745,15 +746,15 @@ add_custom_command(
         -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
         -ffreestanding -fwrapv -Wall -Wextra -Werror
         ${CMAKE_SOURCE_DIR}/tools/determine-endian-bitwidth.c
-    COMMAND grep -o 'msgbegin --endian .* --bitwidth .* msgend' ${CURRENT_BINARY_DIR}/endian-and-bitwidth.dummy1 > ${CURRENT_BINARY_DIR}/endian-and-bitwidth.dummy2
-    COMMAND head -n1 <${CURRENT_BINARY_DIR}/endian-and-bitwidth.dummy2 | cut -d' ' -f2-5 > ${CURRENT_BINARY_DIR}/endian-and-bitwidth
-    COMMAND rm -f ${CURRENT_BINARY_DIR}/endian-and-bitwidth.dummy1
-    COMMAND rm -f ${CURRENT_BINARY_DIR}/endian-and-bitwidth.dummy2
+    COMMAND grep -o 'msgbegin --endian .* --bitwidth .* msgend' ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth.dummy1 > ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth.dummy2
+    COMMAND head -n1 <${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth.dummy2 | cut -d' ' -f2-5 > ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth
+    COMMAND rm -f ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth.dummy1
+    COMMAND rm -f ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth.dummy2
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS ${CMAKE_SOURCE_DIR}/tools/capture_output.py ${CMAKE_SOURCE_DIR}/tools/determine-endian-bitwidth.c
     COMMENT "Endian and bitwidth"
 )
-add_custom_target(endian_and_bitwidth ALL DEPENDS ${CURRENT_BINARY_DIR}/endian-and-bitwidth)
+add_custom_target(endian_and_bitwidth ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth)
 
 add_custom_target(encode_sounds)
 macro(encode_sound INPUT_FILE)
@@ -764,30 +765,30 @@ macro(encode_sound INPUT_FILE)
 
     if(${MODIFIED_FILENAME} STREQUAL ${OUTPUT_FILENAME})
         add_custom_command(
-            OUTPUT ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/
-            COMMAND ${CMAKE_SOURCE_DIR}/tools/aiff_extract_codebook ${INPUT_FILE} >${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table
-            COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table ${INPUT_FILE} ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
+            OUTPUT ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/aiff_extract_codebook ${INPUT_FILE} >${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table ${INPUT_FILE} ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS aiff_extract_codebook vadpcm_enc
-            COMMENT "Encoding sound ${INPUT_FILE} -> ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
+            COMMENT "Encoding sound ${INPUT_FILE} -> ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
         )
     else()
         # hack: cmake output can't contain #, so we generate an additional file not containing the #
         add_custom_command(
-            OUTPUT ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
-            COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/
-            COMMAND ${CMAKE_SOURCE_DIR}/tools/aiff_extract_codebook ${INPUT_FILE} >${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table
-            COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table ${INPUT_FILE} ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
-            COMMAND ${CMAKE_COMMAND} -E copy "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc" "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.aifc"
+            OUTPUT ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/aiff_extract_codebook ${INPUT_FILE} >${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table
+            COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.table ${INPUT_FILE} ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
+            COMMAND ${CMAKE_COMMAND} -E copy "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc" "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}.aifc"
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS aiff_extract_codebook vadpcm_enc
-            COMMENT "Encoding sound ${INPUT_FILE} -> ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
+            COMMENT "Encoding sound ${INPUT_FILE} -> ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
         )
     endif()
 
     string(REPLACE "/" "_" TARGET_NAME "encode_sound${RELATIVE_PATH}/${MODIFIED_FILENAME}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc)
+    add_custom_target(${TARGET_NAME} ALL DEPENDS ${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc)
     add_dependencies(encode_sounds ${TARGET_NAME})
 endmacro()
 
@@ -801,38 +802,38 @@ foreach(SOUND_FILE ${SOUND_FILES})
 endforeach()
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/sound/sound_data.ctl.inc.c
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/sound/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl.inc.c
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/sound/
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/assemble_sound.py
-        ${CURRENT_BINARY_DIR}/sound/samples/
+        ${ABSOLUTE_BUILD_DIR}/sound/samples/
         ${CMAKE_SOURCE_DIR}/sound/sound_banks/
-        ${CURRENT_BINARY_DIR}/sound/sound_data.ctl
-        ${CURRENT_BINARY_DIR}/sound/ctl_header
-        ${CURRENT_BINARY_DIR}/sound/sound_data.tbl
-        ${CURRENT_BINARY_DIR}/sound/tbl_header
+        ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl
+        ${ABSOLUTE_BUILD_DIR}/sound/ctl_header
+        ${ABSOLUTE_BUILD_DIR}/sound/sound_data.tbl
+        ${ABSOLUTE_BUILD_DIR}/sound/tbl_header
         -D${ROM_VERSION_STRING}=1
         -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 # TODO
-        "$(cat ${CURRENT_BINARY_DIR}/endian-and-bitwidth)"
-    COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${CURRENT_BINARY_DIR}/sound/sound_data.ctl > ${CURRENT_BINARY_DIR}/sound/sound_data.ctl.inc.c
-    COMMAND echo >> ${CURRENT_BINARY_DIR}/sound/sound_data.ctl.inc.c
-    COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${CURRENT_BINARY_DIR}/sound/sound_data.tbl > ${CURRENT_BINARY_DIR}/sound/sound_data.tbl.inc.c
-    COMMAND echo >> ${CURRENT_BINARY_DIR}/sound/sound_data.tbl.inc.c
+        "$(cat ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth)"
+    COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl > ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl.inc.c
+    COMMAND echo >> ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl.inc.c
+    COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${ABSOLUTE_BUILD_DIR}/sound/sound_data.tbl > ${ABSOLUTE_BUILD_DIR}/sound/sound_data.tbl.inc.c
+    COMMAND echo >> ${ABSOLUTE_BUILD_DIR}/sound/sound_data.tbl.inc.c
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    DEPENDS ${CURRENT_BINARY_DIR}/endian-and-bitwidth ${CMAKE_SOURCE_DIR}/tools/assemble_sound.py
+    DEPENDS ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth ${CMAKE_SOURCE_DIR}/tools/assemble_sound.py
     COMMENT "Converting sounds"
 )
-add_custom_target(convert_sounds ALL DEPENDS ${CURRENT_BINARY_DIR}/sound/sound_data.ctl.inc.c)
+add_custom_target(convert_sounds ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl.inc.c)
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.m64
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/sound/sequences/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.m64
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/sound/sequences/
     COMMAND clang
         -E -P -x c
         -Wno-trigraphs
         -D_LANGUAGE_ASSEMBLY
         -I${CMAKE_SOURCE_DIR}/include
-        -I${CURRENT_BINARY_DIR}
-        -I${CURRENT_BINARY_DIR}/include
+        -I${ABSOLUTE_BUILD_DIR}
+        -I${ABSOLUTE_BUILD_DIR}/include
         -I${CMAKE_SOURCE_DIR}/src
         -I${CMAKE_SOURCE_DIR}
         -I${CMAKE_SOURCE_DIR}/include/libc
@@ -842,13 +843,13 @@ add_custom_command(
         -DNON_MATCHING=1
         -DAVOID_UB=1
         -D_FINALROM=1
-        -o ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.temp
+        -o ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.temp
         ${CMAKE_SOURCE_DIR}/sound/sequences/00_sound_player.s
     COMMAND mips-linux-gnu-as
             -march=vr4300 -mabi=32
             -I${CMAKE_SOURCE_DIR}/include
-            -I${CURRENT_BINARY_DIR}
-            -I${CURRENT_BINARY_DIR}/include
+            -I${ABSOLUTE_BUILD_DIR}
+            -I${ABSOLUTE_BUILD_DIR}/include
             -I${CMAKE_SOURCE_DIR}/src
             -I${CMAKE_SOURCE_DIR}
             -I${CMAKE_SOURCE_DIR}/include/libc
@@ -858,30 +859,30 @@ add_custom_command(
             --defsym NON_MATCHING=1
             --defsym AVOID_UB=1
             --defsym _FINALROM=1
-            -MD ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.d
-            -o ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.o
-            ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.temp
+            -MD ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.d
+            -o ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.o
+            ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.temp
     COMMAND mips-linux-gnu-objcopy # TODO: use variable
         -j .rodata
-        ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.o
+        ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.o
         -O binary
-        ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.m64
+        ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.m64
     DEPENDS ${CMAKE_SOURCE_DIR}/sound/sequences/00_sound_player.s
-    COMMENT "Assembling: sound/sequences/00_sound_player.s -> ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.m64"
+    COMMENT "Assembling: sound/sequences/00_sound_player.s -> ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.m64"
 )
-add_custom_target(assemble_sound_player ALL DEPENDS ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.m64)
+add_custom_target(assemble_sound_player ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.m64)
 
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/sound/bank_sets.inc.c
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/sound/
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/sound/bank_sets.inc.c
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/sound/
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/assemble_sound.py
         --sequences
-        ${CURRENT_BINARY_DIR}/sound/sequences.bin
-        ${CURRENT_BINARY_DIR}/sound/sequences_header
-        ${CURRENT_BINARY_DIR}/sound/bank_sets sound/sound_banks/
+        ${ABSOLUTE_BUILD_DIR}/sound/sequences.bin
+        ${ABSOLUTE_BUILD_DIR}/sound/sequences_header
+        ${ABSOLUTE_BUILD_DIR}/sound/bank_sets sound/sound_banks/
         ${CMAKE_SOURCE_DIR}/sound/sequences.json
-        ${CURRENT_BINARY_DIR}/sound/sequences/00_sound_player.m64
+        ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.m64
         ${CMAKE_SOURCE_DIR}/sound/sequences/jp/1D_event_peach_message.m64
         ${CMAKE_SOURCE_DIR}/sound/sequences/jp/1A_cutscene_credits.m64
         ${CMAKE_SOURCE_DIR}/sound/sequences/jp/0D_menu_star_select.m64
@@ -917,16 +918,16 @@ add_custom_command(
         ${CMAKE_SOURCE_DIR}/sound/sequences/jp/0C_level_underground.m64
         -D${ROM_VERSION_STRING}=1
         -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 # TODO
-        "$(cat ${CURRENT_BINARY_DIR}/endian-and-bitwidth)"
-    COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${CURRENT_BINARY_DIR}/sound/sequences.bin > ${CURRENT_BINARY_DIR}/sound/sequences.bin.inc.c
-    COMMAND echo >> ${CURRENT_BINARY_DIR}/sound/sequences.bin.inc.c
-    COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${CURRENT_BINARY_DIR}/sound/bank_sets > ${CURRENT_BINARY_DIR}/sound/bank_sets.inc.c
-    COMMAND echo >> ${CURRENT_BINARY_DIR}/sound/bank_sets.inc.c
+        "$(cat ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth)"
+    COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${ABSOLUTE_BUILD_DIR}/sound/sequences.bin > ${ABSOLUTE_BUILD_DIR}/sound/sequences.bin.inc.c
+    COMMAND echo >> ${ABSOLUTE_BUILD_DIR}/sound/sequences.bin.inc.c
+    COMMAND hexdump -v -e '1/1 \"0x%X,\"' ${ABSOLUTE_BUILD_DIR}/sound/bank_sets > ${ABSOLUTE_BUILD_DIR}/sound/bank_sets.inc.c
+    COMMAND echo >> ${ABSOLUTE_BUILD_DIR}/sound/bank_sets.inc.c
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    DEPENDS ${CURRENT_BINARY_DIR}/endian-and-bitwidth ${CMAKE_SOURCE_DIR}/tools/assemble_sound.py
+    DEPENDS ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth ${CMAKE_SOURCE_DIR}/tools/assemble_sound.py
     COMMENT "Converting sounds"
 )
-add_custom_target(convert_sequences ALL DEPENDS ${CURRENT_BINARY_DIR}/sound/bank_sets.inc.c)
+add_custom_target(convert_sequences ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sound/bank_sets.inc.c)
 
 # convert textures ------------------------------------------------------------
 add_custom_target(convert_textures)
@@ -1096,31 +1097,31 @@ foreach(PNG_FILE ${PNG_FILES})
 
     string(REGEX MATCH ".*ipl3_raw.*" IS_RAW ${OUTPUT_DIR})
     if(IS_RAW)
-        convert_texture_ia1_raw(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+        convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     else()
         string(REGEX MATCH ".*\.ia1.png" IS_IA1 ${PNG_FILE})
         if(IS_IA1)
             # special case for a single texture
             string(REGEX MATCH ".*crash_screen_font\.ia1\.png" IS_CRASH_TEXTURE ${PNG_FILE})
             if(IS_CRASH_TEXTURE)
-                convert_crash_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
             else()
-                convert_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
             endif()
         else()
             string(REGEX MATCH ".*\.ia4.png" IS_IA4 ${PNG_FILE})
             if(IS_IA4)
-                convert_texture_ia4(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
             else()
                 string(REGEX MATCH ".*\.ia8.png" IS_IA8 ${PNG_FILE})
                 if(IS_IA8)
-                    convert_texture_ia8(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
                     string(REGEX MATCH ".*\.ia16.png" IS_IA16 ${PNG_FILE})
                     if(IS_IA16)
-                        convert_texture_ia16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                     else()
-                        convert_texture_rgba16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                     endif()
                 endif()
             endif()
@@ -1159,31 +1160,31 @@ foreach(TEXTURE_DIRECTORY ${TEXTURE_DIRECTORIES})
 
         string(REGEX MATCH ".*ipl3_raw.*" IS_RAW ${OUTPUT_DIR})
         if(IS_RAW)
-            convert_texture_ia1_raw(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+            convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
         else()
             string(REGEX MATCH ".*\.ia1.png" IS_IA1 ${PNG_FILE})
             if(IS_IA1)
                 # special case for a single texture
                 string(REGEX MATCH ".*crash_screen_font\.ia1\.png" IS_CRASH_TEXTURE ${PNG_FILE})
                 if(IS_CRASH_TEXTURE)
-                    convert_crash_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
-                    convert_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 endif()
             else()
                 string(REGEX MATCH ".*\.ia4.png" IS_IA4 ${PNG_FILE})
                 if(IS_IA4)
-                    convert_texture_ia4(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
                     string(REGEX MATCH ".*\.ia8.png" IS_IA8 ${PNG_FILE})
                     if(IS_IA8)
-                        convert_texture_ia8(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                     else()
                         string(REGEX MATCH ".*\.ia16.png" IS_IA16 ${PNG_FILE})
                         if(IS_IA16)
-                            convert_texture_ia16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                            convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                         else()
-                            convert_texture_rgba16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                            convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                         endif()
                     endif()
                 endif()
@@ -1238,31 +1239,31 @@ foreach(LEVEL_DIRECTORY ${LEVEL_DIRECTORIES})
 
         string(REGEX MATCH ".*ipl3_raw.*" IS_RAW ${OUTPUT_DIR})
         if(IS_RAW)
-            convert_texture_ia1_raw(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+            convert_texture_ia1_raw(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
         else()
             string(REGEX MATCH ".*\.ia1.png" IS_IA1 ${PNG_FILE})
             if(IS_IA1)
                 # special case for a single texture
                 string(REGEX MATCH ".*crash_screen_font\.ia1\.png" IS_CRASH_TEXTURE ${PNG_FILE})
                 if(IS_CRASH_TEXTURE)
-                    convert_crash_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_crash_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
-                    convert_texture_ia1(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia1(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 endif()
             else()
                 string(REGEX MATCH ".*\.ia4.png" IS_IA4 ${PNG_FILE})
                 if(IS_IA4)
-                    convert_texture_ia4(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                    convert_texture_ia4(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                 else()
                     string(REGEX MATCH ".*\.ia8.png" IS_IA8 ${PNG_FILE})
                     if(IS_IA8)
-                        convert_texture_ia8(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                        convert_texture_ia8(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                     else()
                         string(REGEX MATCH ".*\.ia16.png" IS_IA16 ${PNG_FILE})
                         if(IS_IA16)
-                            convert_texture_ia16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                            convert_texture_ia16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                         else()
-                            convert_texture_rgba16(${PNG_FILE} "${CURRENT_BINARY_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+                            convert_texture_rgba16(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}${RELATIVE_PATH}/${OUTPUT_FILENAME}")
                         endif()
                     endif()
                 endif()
@@ -1305,7 +1306,7 @@ foreach(SKYBOX_DIRECTORY ${SKYBOX_DIRECTORIES})
         get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
         get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
         string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-        convert_skybox(${PNG_FILE} "${CURRENT_BINARY_DIR}/bin/${OUTPUT_FILENAME}_skybox")
+        convert_skybox(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/bin/${OUTPUT_FILENAME}_skybox")
     endforeach()
 endforeach()
 
@@ -1343,7 +1344,7 @@ foreach(CAKE_DIRECTORY ${CAKE_DIRECTORIES})
         get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
         get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
         string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
-        convert_cake(${PNG_FILE} "${CURRENT_BINARY_DIR}/levels/ending/${OUTPUT_FILENAME}.inc.c")
+        convert_cake(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/levels/ending/${OUTPUT_FILENAME}.inc.c")
     endforeach()
 endforeach()
 
@@ -2133,8 +2134,8 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
-    set(OBJECT_FILE ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
-    set(DEPENDENCY_FILE ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
+    set(OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(DEPENDENCY_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
 
 #Compiling: src/goddard/dynlists/dynlist_unused.c -> build/jp/src/goddard/dynlists/dynlist_unused.o
 #gcc -fsyntax-only -fsigned-char -fno-builtin -nostdinc -DTARGET_N64 -D_LANGUAGE_C -std=gnu90 -Wall -Wextra -Wno-format-security -Wno-main -DNON_MATCHING -DAVOID_UB -Iinclude -Ibuild/jp -Ibuild/jp/include -Isrc -I. -Iinclude/libc -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 -m32 -MMD -MP -MT build/jp/src/goddard/dynlists/dynlist_unused.o -MF build/jp/src/goddard/dynlists/dynlist_unused.d src/goddard/dynlists/dynlist_unused.c
@@ -2143,7 +2144,7 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
     # Add a custom command to compile the source file
     add_custom_command(
         OUTPUT ${OBJECT_FILE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
         COMMAND gcc
             -fsyntax-only -fsigned-char -fno-builtin -nostdinc
             -DTARGET_N64 -D_LANGUAGE_C -std=gnu90
@@ -2152,8 +2153,8 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${CURRENT_BINARY_DIR}/
-            -I${CURRENT_BINARY_DIR}/include/
+            -I${ABSOLUTE_BUILD_DIR}/
+            -I${ABSOLUTE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -m32 -MMD -MP -MT ${OBJECT_FILE}
@@ -2165,8 +2166,8 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${CURRENT_BINARY_DIR}/
-            -I${CURRENT_BINARY_DIR}/include/
+            -I${ABSOLUTE_BUILD_DIR}/
+            -I${ABSOLUTE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
@@ -2186,27 +2187,27 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
 endforeach()
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/libgoddard.a
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/libgoddard.a
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # link
     COMMAND mips-linux-gnu-ar
-            rcs -o ${CURRENT_BINARY_DIR}/libgoddard.a
+            rcs -o ${ABSOLUTE_BUILD_DIR}/libgoddard.a
             ${GODDARD_OBJECT_FILES}  # Input object file
     DEPENDS ${GODDARD_OBJECT_FILES}
     COMMENT "Compiling and linking to create libgoddard"
 )
 
-add_custom_target(goddard ALL DEPENDS ${CURRENT_BINARY_DIR}/libgoddard.a)
+add_custom_target(goddard ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/libgoddard.a)
 
 add_custom_command(
-    OUTPUT ${CURRENT_BINARY_DIR}/libgcc.a
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/libgcc.a
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # link
-    COMMAND mips-linux-gnu-ar rcs -o ${CURRENT_BINARY_DIR}/libgcc.a
+    COMMAND mips-linux-gnu-ar rcs -o ${ABSOLUTE_BUILD_DIR}/libgcc.a
     COMMENT "Linking libgcc"
 )
 
-add_custom_target(libgcc ALL DEPENDS ${CURRENT_BINARY_DIR}/libgcc.a)
+add_custom_target(libgcc ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/libgcc.a)
 
 set(ELF_FILES)
 
@@ -2221,13 +2222,13 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
-    set(OBJECT_FILE ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
-    set(DEPENDENCY_FILE ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
+    set(OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(DEPENDENCY_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
 
     # Add a custom command to compile the source file
     add_custom_command(
         OUTPUT ${OBJECT_FILE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
         COMMAND gcc
             -fsyntax-only -fsigned-char -fno-builtin -nostdinc
             -DTARGET_N64 -D_LANGUAGE_C -std=gnu90
@@ -2236,8 +2237,8 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${CURRENT_BINARY_DIR}/
-            -I${CURRENT_BINARY_DIR}/include/
+            -I${ABSOLUTE_BUILD_DIR}/
+            -I${ABSOLUTE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -m32 -MMD -MP -MT ${OBJECT_FILE}
@@ -2249,8 +2250,8 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${CURRENT_BINARY_DIR}/
-            -I${CURRENT_BINARY_DIR}/include/
+            -I${ABSOLUTE_BUILD_DIR}/
+            -I${ABSOLUTE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
@@ -2305,9 +2306,9 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
                 -I${CMAKE_SOURCE_DIR}/include
                 -I${CMAKE_SOURCE_DIR}/include/libc
                 -I${CMAKE_SOURCE_DIR}/src
-                -I${CURRENT_BINARY_DIR}
-                -I${CURRENT_BINARY_DIR}/bin
-                -I${CURRENT_BINARY_DIR}/include
+                -I${ABSOLUTE_BUILD_DIR}
+                -I${ABSOLUTE_BUILD_DIR}/bin
+                -I${ABSOLUTE_BUILD_DIR}/include
                 -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
                 -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
                 -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
@@ -2454,31 +2455,31 @@ foreach(SOURCE_FILE ${FILTERED_SOURCE_FILES})
         endif()
     endif()
 
-    mio_file(${SOURCE_FILE} ${CURRENT_BINARY_DIR}/bin/${OUTPUT_FILENAME} ${TTEXT})
+    mio_file(${SOURCE_FILE} ${ABSOLUTE_BUILD_DIR}/bin/${OUTPUT_FILENAME} ${TTEXT})
 endforeach()
 
 # build/[eu/jp/sh/us]/actors/*.o ----------------------------------------------
 set(ACTORS_OBJECT_FILES_TO_ELF_FILES
-    "${CURRENT_BINARY_DIR}/actors/common0.o#0x08000000"
-    "${CURRENT_BINARY_DIR}/actors/common1.o#0x03000000"
-    "${CURRENT_BINARY_DIR}/actors/group0.o#0x04000000"
-    "${CURRENT_BINARY_DIR}/actors/group1.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group2.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group3.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group4.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group5.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group6.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group7.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group8.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group9.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group10.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group11.o#0x05000000"
-    "${CURRENT_BINARY_DIR}/actors/group12.o#0x06000000"
-    "${CURRENT_BINARY_DIR}/actors/group13.o#0x06000000"
-    "${CURRENT_BINARY_DIR}/actors/group14.o#0x06000000"
-    "${CURRENT_BINARY_DIR}/actors/group15.o#0x06000000"
-    "${CURRENT_BINARY_DIR}/actors/group16.o#0x06000000"
-    "${CURRENT_BINARY_DIR}/actors/group17.o#0x06000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/common0.o#0x08000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/common1.o#0x03000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group0.o#0x04000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group1.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group2.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group3.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group4.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group5.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group6.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group7.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group8.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group9.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group10.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group11.o#0x05000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group12.o#0x06000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group13.o#0x06000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group14.o#0x06000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group15.o#0x06000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group16.o#0x06000000"
+    "${ABSOLUTE_BUILD_DIR}/actors/group17.o#0x06000000"
 )
 
 foreach(OBJECT_TO_ELF_FILE ${ACTORS_OBJECT_FILES_TO_ELF_FILES})
@@ -2488,44 +2489,44 @@ foreach(OBJECT_TO_ELF_FILE ${ACTORS_OBJECT_FILES_TO_ELF_FILES})
     get_filename_component(OUTPUT_DIR "${OBJECT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OBJECT_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    mio_file(${OBJECT_FILE} "${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
+    mio_file(${OBJECT_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
 endforeach()
 
 # build/[eu/jp/sh/us]/levels/*/leveldata.o ----------------------------------------------
 set(LEVELDATA_OBJECT_FILES_TO_ELF_FILES
-    "${CURRENT_BINARY_DIR}/levels/bbh/leveldata.o#build/${ROM_VERSION}/bin/spooky.elf"
-    "${CURRENT_BINARY_DIR}/levels/bitdw/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/bitfs/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/bits/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/bob/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/bowser_1/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/bowser_2/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
-    "${CURRENT_BINARY_DIR}/levels/bowser_3/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/castle_courtyard/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
-    "${CURRENT_BINARY_DIR}/levels/castle_grounds/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
-    "${CURRENT_BINARY_DIR}/levels/castle_inside/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
-    "${CURRENT_BINARY_DIR}/levels/ccm/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
-    "${CURRENT_BINARY_DIR}/levels/cotmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
-    "${CURRENT_BINARY_DIR}/levels/ddd/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
-    "${CURRENT_BINARY_DIR}/levels/ending/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/hmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
-    "${CURRENT_BINARY_DIR}/levels/intro/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/jrb/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
-    "${CURRENT_BINARY_DIR}/levels/lll/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
-    "${CURRENT_BINARY_DIR}/levels/menu/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/pss/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
-    "${CURRENT_BINARY_DIR}/levels/rr/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/sa/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
-    "${CURRENT_BINARY_DIR}/levels/sl/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
-    "${CURRENT_BINARY_DIR}/levels/ssl/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
-    "${CURRENT_BINARY_DIR}/levels/thi/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
-    "${CURRENT_BINARY_DIR}/levels/totwc/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
-    "${CURRENT_BINARY_DIR}/levels/ttc/leveldata.o#build/${ROM_VERSION}/bin/machine.elf"
-    "${CURRENT_BINARY_DIR}/levels/ttm/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
-    "${CURRENT_BINARY_DIR}/levels/vcutm/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
-    "${CURRENT_BINARY_DIR}/levels/wdw/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
-    "${CURRENT_BINARY_DIR}/levels/wf/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
-    "${CURRENT_BINARY_DIR}/levels/wmotr/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/bbh/leveldata.o#build/${ROM_VERSION}/bin/spooky.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/bitdw/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/bitfs/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/bits/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/bob/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/bowser_1/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/bowser_2/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/bowser_3/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/castle_courtyard/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/castle_grounds/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/castle_inside/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/ccm/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/cotmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/ddd/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/ending/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/hmc/leveldata.o#build/${ROM_VERSION}/bin/cave.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/intro/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/jrb/leveldata.o#build/${ROM_VERSION}/bin/water.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/lll/leveldata.o#build/${ROM_VERSION}/bin/fire.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/menu/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/pss/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/rr/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/sa/leveldata.o#build/${ROM_VERSION}/bin/inside.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/sl/leveldata.o#build/${ROM_VERSION}/bin/snow.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/ssl/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/thi/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/totwc/leveldata.o#build/${ROM_VERSION}/bin/sky.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/ttc/leveldata.o#build/${ROM_VERSION}/bin/machine.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/ttm/leveldata.o#build/${ROM_VERSION}/bin/mountain.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/vcutm/leveldata.o#build/${ROM_VERSION}/bin/outside.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/wdw/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/wf/leveldata.o#build/${ROM_VERSION}/bin/grass.elf"
+    "${ABSOLUTE_BUILD_DIR}/levels/wmotr/leveldata.o#build/${ROM_VERSION}/bin/generic.elf"
 )
 
 foreach(OBJECT_TO_ELF_FILE ${LEVELDATA_OBJECT_FILES_TO_ELF_FILES})
@@ -2535,22 +2536,22 @@ foreach(OBJECT_TO_ELF_FILE ${LEVELDATA_OBJECT_FILES_TO_ELF_FILES})
     get_filename_component(OUTPUT_DIR "${OBJECT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OBJECT_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    mio_leveldata(${OBJECT_FILE} "${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${ELF_FILE})
+    mio_leveldata(${OBJECT_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${ELF_FILE})
 endforeach()
 
 # build/[eu/jp/sh/us]/bin/*_skybox.c ----------------------------------------------
 # these are generated by converting the skybox textures
 set(SKYBOX_SOURCE_FILES_TO_ELF_FILES
-    "${CURRENT_BINARY_DIR}/bin/wdw_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/bbh_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/bidw_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/bitfs_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/bits_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/ccm_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/cloud_floor_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/clouds_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/ssl_skybox.c#0x0A000000"
-    "${CURRENT_BINARY_DIR}/bin/water_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/wdw_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/bbh_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/bidw_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/bitfs_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/bits_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/ccm_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/cloud_floor_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/clouds_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/ssl_skybox.c#0x0A000000"
+    "${ABSOLUTE_BUILD_DIR}/bin/water_skybox.c#0x0A000000"
 )
 
 foreach(SOURCE_FILE_TO_ELF ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
@@ -2560,11 +2561,11 @@ foreach(SOURCE_FILE_TO_ELF ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
     get_filename_component(OUTPUT_DIR "${SOURCE_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${SOURCE_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    mio_file(${SOURCE_FILE} "${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
+    mio_file(${SOURCE_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
 endforeach()
 
 # add executable --------------------------------------------------------------
-set(SM64_ELF ${CURRENT_BINARY_DIR}/sm64.${ROM_VERSION}.elf)
+set(SM64_ELF ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.elf)
 
 set(R_ELF_FILES)
 foreach(ELF_FILE ${ELF_FILES})
@@ -2574,11 +2575,11 @@ endforeach()
 add_custom_command(
     OUTPUT ${SM64_ELF}
     COMMAND ${CMAKE_LINKER}
-    -L${CURRENT_BINARY_DIR}
+    -L${ABSOLUTE_BUILD_DIR}
     #-L${CMAKE_SOURCE_DIR}
     -T ${CMAKE_SOURCE_DIR}/undefined_syms.txt
-    -T ${CURRENT_BINARY_DIR}/sm64.ld
-    -Map ${CURRENT_BINARY_DIR}/sm64.jp.map
+    -T ${ABSOLUTE_BUILD_DIR}/sm64.ld
+    -Map ${ABSOLUTE_BUILD_DIR}/sm64.jp.map
     --no-check-sections
     ${R_ELF_FILES}
     -o ${SM64_ELF}
@@ -2593,10 +2594,10 @@ add_custom_command(
 add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})
 
 #message(FATAL_ERROR "${CMAKE_LINKER}
-#    -L${CURRENT_BINARY_DIR}
+#    -L${ABSOLUTE_BUILD_DIR}
 #    -T ${CMAKE_SOURCE_DIR}/undefined_syms.txt
-#    -T ${CURRENT_BINARY_DIR}/sm64.ld
-#    -Map ${CURRENT_BINARY_DIR}/sm64.jp.map
+#    -T ${ABSOLUTE_BUILD_DIR}/sm64.ld
+#    -Map ${ABSOLUTE_BUILD_DIR}/sm64.jp.map
 #    --no-check-sections
 #    ${R_ELF_FILES}
 #    -o ${SM64_ELF}
@@ -2614,8 +2615,8 @@ add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})
 #    ${CMAKE_SOURCE_DIR}/include/
 #    ${CMAKE_SOURCE_DIR}/include/libc/
 #    ${CMAKE_SOURCE_DIR}/src/
-#    ${CURRENT_BINARY_DIR}/
-#    ${CURRENT_BINARY_DIR}/include/
+#    ${ABSOLUTE_BUILD_DIR}/
+#    ${ABSOLUTE_BUILD_DIR}/include/
 #    ${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
 #)
 
