@@ -2274,6 +2274,13 @@ add_custom_target(link_elfs)
 macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
+
+    set(ABS_OBJECT_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.o)
+    set(ABS_DEPENDENCY_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.d)
+    set(ABS_OUTPUT_ELF ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf)
+    set(ABS_OUTPUT_BIN ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin)
+    set(ABS_OUTPUT_MIO0 ${OUTPUT_DIR}/${OUTPUT_FILENAME}.mio0)
+
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     set(OBJECT_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
@@ -2287,7 +2294,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
     # check if the given file is a c file, if it is, compile it
     if(${INPUT_FILE_EXT} STREQUAL ".c")
         add_custom_command(
-            OUTPUT ${OBJECT_FILE} ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map ${OUTPUT_ELF} ${OUTPUT_MIO0} ${OUTPUT_MIO0}.o
+            OUTPUT ${ABS_OBJECT_FILE} ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o
             COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
             # compile
             COMMAND ${CMAKE_C_COMPILER}
@@ -2326,7 +2333,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
         )
     else()
         add_custom_command(
-            OUTPUT ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map ${OUTPUT_ELF} ${OUTPUT_MIO0} ${OUTPUT_MIO0}.o
+            OUTPUT ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o
             COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
             # link
             COMMAND ${CMAKE_LINKER}
@@ -2343,7 +2350,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
             DEPENDS ${INPUT_FILE}
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-            COMMENT "Compiling and linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+            COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
         )
     endif()
 
@@ -2351,7 +2358,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
 
     # Create a custom target to link the ELF file
     string(REPLACE "/" "_" TARGET_NAME "mio0_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_MIO0}.o)
+    add_custom_target(${TARGET_NAME} ALL DEPENDS ${ABS_OUTPUT_MIO0}.o)
     add_dependencies(${TARGET_NAME} mio0 elf_target)
     add_dependencies(link_elfs ${TARGET_NAME})
 endmacro()
@@ -2359,6 +2366,13 @@ endmacro()
 macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
+
+    set(ABS_OBJECT_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.o)
+    set(ABS_DEPENDENCY_FILE ${OUTPUT_DIR}/${OUTPUT_FILENAME}.d)
+    set(ABS_OUTPUT_ELF ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf)
+    set(ABS_OUTPUT_BIN ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin)
+    set(ABS_OUTPUT_MIO0 ${OUTPUT_DIR}/${OUTPUT_FILENAME}.mio0)
+
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     set(OBJECT_FILE ${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
@@ -2368,7 +2382,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
     set(OUTPUT_MIO0 ${RELATIVE_PATH}/${OUTPUT_FILENAME}.mio0)
 
     add_custom_command(
-        OUTPUT ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map ${OUTPUT_ELF} ${OUTPUT_BIN} ${OUTPUT_MIO0} ${OUTPUT_MIO0}.o
+        OUTPUT ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_BIN} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         # link
         COMMAND ${CMAKE_LINKER}
@@ -2395,7 +2409,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
     #message(STATUS "mio0${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     string(REPLACE "/" "_" TARGET_NAME "mio0_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
     #message(FATAL_ERROR "${TARGET_NAME}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_MIO0}.o)
+    add_custom_target(${TARGET_NAME} ALL DEPENDS ${ABS_OUTPUT_MIO0}.o)
     #add_dependencies(${OUTPUT_FILENAME} mio0 convert_textures) # TODO: slow
     add_dependencies(${TARGET_NAME} mio0 elf_target)
     add_dependencies(link_elfs ${TARGET_NAME})
