@@ -158,6 +158,7 @@ add_custom_command(
     DEPENDS ${CMAKE_SOURCE_DIR}/extract_assets.py
     COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/extract_assets.py..."
 )
+add_custom_target(extract_assets ALL DEPENDS ${ASSETS_JP})
 
 set(CHARMAP charmap.txt)
 add_custom_command(
