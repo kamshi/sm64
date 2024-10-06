@@ -148,8 +148,10 @@ add_definitions(${SM64_COMPILE_DEFINITIONS})
 #endif
 
 # extract assets --------------------------------------------------------------
+include(actors_jp.cmake)
+
 add_custom_command(
-    OUTPUT ${CMAKE_SOURCE_DIR}/actors/blue_coin_switch/blue_coin_switch_side.rgba16.png # TODO
+    OUTPUT ${ASSETS_JP}
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/extract_assets.py ${ROM_VERSION}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     DEPENDS ${CMAKE_SOURCE_DIR}/extract_assets.py
@@ -329,7 +331,6 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
 
-    # clang -E -P -x c -Wno-trigraphs -D_LANGUAGE_ASSEMBLY -Iinclude -Ibuild/jp -Ibuild/jp/include -Isrc -I. -Iinclude/libc -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1 lib/asm/__osSetCompare.s | mips-linux-gnu-as -march=vr4300 -mabi=32 -Iinclude -Ibuild/jp -Ibuild/jp/include -Isrc -I. -Iinclude/libc --defsym VERSION_JP=1 --defsym F3D_OLD=1 --defsym NON_MATCHING=1 --defsym AVOID_UB=1 --defsym _FINALROM=1 -MD build/jp/lib/asm/__osSetCompare.d -o build/jp/lib/asm/__osSetCompare.o
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
@@ -716,7 +717,8 @@ macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f ia1
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -738,7 +740,8 @@ macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f ia1
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -760,7 +763,8 @@ macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}
                 -g ${INPUT_FILE}
                 -f ia1
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -782,7 +786,8 @@ macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f ia4
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -799,7 +804,8 @@ macro(convert_texture_ia8 INPUT_FILE OUTPUT_FILE)
         OUTPUT ${OUTPUT_FILE}.inc.c
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64graphics -s u8 -i ${OUTPUT_FILE}.inc.c -g ${INPUT_FILE} -f ia8
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -821,7 +827,8 @@ macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f ia16
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -843,7 +850,8 @@ macro(convert_texture_rgba16 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f rgba16
-        DEPENDS ${INPUT_FILE}
+        #DEPENDS ${INPUT_FILE}
+        DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
     string(REPLACE "/" "_" TARGET_NAME "convert_texture${RELATIVE_PATH}/${OUTPUT_FILENAME}")
@@ -1954,7 +1962,7 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
 endforeach()
 
 add_custom_target(link_elfs)
-macro(mio_file INPUT_FILE OUTPUT_FILE)
+macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
     string(REPLACE "${CMAKE_SOURCE_DIR}" "" RELATIVE_PATH "${OUTPUT_DIR}")
@@ -2001,7 +2009,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE)
         # link
         COMMAND ${CMAKE_LINKER}
                 -e 0
-                -Ttext=0x09000000 # TODO: make dependent of source file
+                -Ttext=${TTEXT}
                 -Map ${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf.map
                 -o ${OUTPUT_ELF}
                 ${OBJECT_FILE}  # Input object file
@@ -2088,36 +2096,64 @@ endforeach()
 
 foreach(SOURCE_FILE ${FILTERED_SOURCE_FILES})
     get_filename_component(OUTPUT_FILENAME "${SOURCE_FILE}" NAME_WLE)
-    mio_file(${SOURCE_FILE} ${CURRENT_BINARY_DIR}/bin/${OUTPUT_FILENAME})
+
+    set(TTEXT "0x09000000")
+    string(REGEX MATCH ".*/segment2.c" IS_SEGMENT2 ${SOURCE_FILE})
+    if(IS_SEGMENT2)
+        set(TTEXT "0x02000000")
+    else()
+        string(REGEX MATCH ".*/debug_level_select.c" IS_DEBUG_LEVEL_SELECT ${SOURCE_FILE})
+        if(IS_DEBUG_LEVEL_SELECT)
+            set(TTEXT "0x07000000")
+        else()
+            string(REGEX MATCH ".*/effect.c" IS_EFFECT ${SOURCE_FILE})
+            if(IS_EFFECT)
+                set(TTEXT "0x0B000000")
+            else()
+                string(REGEX MATCH ".*/title_screen_bg.c" IS_TITLE_SCREEN_BG ${SOURCE_FILE})
+                if(IS_TITLE_SCREEN_BG)
+                    set(TTEXT "0x0A000000")
+                endif()
+            endif()
+        endif()
+    endif()
+
+    mio_file(${SOURCE_FILE} ${CURRENT_BINARY_DIR}/bin/${OUTPUT_FILENAME} ${TTEXT})
 endforeach()
 
 # build/[eu/jp/sh/us]/actors/*.o ----------------------------------------------
 set(ACTORS_OBJECT_FILES_TO_ELF_FILES
-    ${CURRENT_BINARY_DIR}/actors/common0.o
-    ${CURRENT_BINARY_DIR}/actors/common1.o
-    ${CURRENT_BINARY_DIR}/actors/group0.o
-    ${CURRENT_BINARY_DIR}/actors/group1.o
-    ${CURRENT_BINARY_DIR}/actors/group2.o
-    ${CURRENT_BINARY_DIR}/actors/group3.o
-    ${CURRENT_BINARY_DIR}/actors/group4.o
-    ${CURRENT_BINARY_DIR}/actors/group5.o
-    ${CURRENT_BINARY_DIR}/actors/group6.o
-    ${CURRENT_BINARY_DIR}/actors/group7.o
-    ${CURRENT_BINARY_DIR}/actors/group8.o
-    ${CURRENT_BINARY_DIR}/actors/group9.o
-    ${CURRENT_BINARY_DIR}/actors/group10.o
-    ${CURRENT_BINARY_DIR}/actors/group11.o
-    ${CURRENT_BINARY_DIR}/actors/group12.o
-    ${CURRENT_BINARY_DIR}/actors/group13.o
-    ${CURRENT_BINARY_DIR}/actors/group14.o
-    ${CURRENT_BINARY_DIR}/actors/group15.o
-    ${CURRENT_BINARY_DIR}/actors/group16.o
-    ${CURRENT_BINARY_DIR}/actors/group17.o
+    "${CURRENT_BINARY_DIR}/actors/common0.o#0x08000000"
+    "${CURRENT_BINARY_DIR}/actors/common1.o#0x03000000"
+    "${CURRENT_BINARY_DIR}/actors/group0.o#0x04000000"
+    "${CURRENT_BINARY_DIR}/actors/group1.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group2.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group3.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group4.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group5.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group6.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group7.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group8.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group9.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group10.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group11.o#0x05000000"
+    "${CURRENT_BINARY_DIR}/actors/group12.o#0x06000000"
+    "${CURRENT_BINARY_DIR}/actors/group13.o#0x06000000"
+    "${CURRENT_BINARY_DIR}/actors/group14.o#0x06000000"
+    "${CURRENT_BINARY_DIR}/actors/group15.o#0x06000000"
+    "${CURRENT_BINARY_DIR}/actors/group16.o#0x06000000"
+    "${CURRENT_BINARY_DIR}/actors/group17.o#0x06000000"
 )
 
-foreach(OBJECT_FILE ${ACTORS_OBJECT_FILES_TO_ELF_FILES})
+foreach(OBJECT_TO_ELF_FILE ${ACTORS_OBJECT_FILES_TO_ELF_FILES})
+    string(REGEX MATCHALL "[^#]+" OBJECT_TTEXT_PAIR "${OBJECT_TO_ELF_FILE}")
+    list(GET OBJECT_TTEXT_PAIR 0 OBJECT_FILE)
+    list(GET OBJECT_TTEXT_PAIR 1 TTEXT)
+    get_filename_component(OUTPUT_DIR "${OBJECT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OBJECT_FILE}" NAME_WLE)
-    mio_file(${OBJECT_FILE} ${CURRENT_BINARY_DIR}/actors/${OUTPUT_FILENAME}.elf)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    mio_file(${OBJECT_FILE} "${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
+    #mio_file(${OBJECT_FILE} ${CURRENT_BINARY_DIR}/actors/${OUTPUT_FILENAME}.elf)
 endforeach()
 
 # build/[eu/jp/sh/us]/levels/*/leveldata.o ----------------------------------------------
@@ -2170,21 +2206,26 @@ endforeach()
 # build/[eu/jp/sh/us]/bin/*_skybox.c ----------------------------------------------
 # these are generated by converting the skybox textures
 set(SKYBOX_SOURCE_FILES_TO_ELF_FILES
-    ${CURRENT_BINARY_DIR}/bin/wdw_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/bbh_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/bidw_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/bitfs_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/bits_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/ccm_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/cloud_floor_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/clouds_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/ssl_skybox.c
-    ${CURRENT_BINARY_DIR}/bin/water_skybox.c
+    "${CURRENT_BINARY_DIR}/bin/wdw_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/bbh_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/bidw_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/bitfs_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/bits_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/ccm_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/cloud_floor_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/clouds_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/ssl_skybox.c#0x0A000000"
+    "${CURRENT_BINARY_DIR}/bin/water_skybox.c#0x0A000000"
 )
 
-foreach(SOURCE_FILE ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
+foreach(SOURCE_FILE_TO_ELF ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
+    string(REGEX MATCHALL "[^#]+" SOURCE_TTEXT_PAIR "${SOURCE_FILE_TO_ELF}")
+    list(GET SOURCE_TTEXT_PAIR 0 SOURCE_FILE)
+    list(GET SOURCE_TTEXT_PAIR 1 TTEXT)
+    get_filename_component(OUTPUT_DIR "${SOURCE_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${SOURCE_FILE}" NAME_WLE)
-    mio_file(${SOURCE_FILE} ${CURRENT_BINARY_DIR}/bin/${OUTPUT_FILENAME}.elf)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/build/${ROM_VERSION}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    mio_file(${OBJECT_FILE} "${CURRENT_BINARY_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.elf" ${TTEXT})
 endforeach()
 
 # add executable --------------------------------------------------------------
