@@ -379,6 +379,7 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
 endmacro()
 
 file(GLOB ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/asm/*.s")
+list(APPEND ASSEMBLY_FILES lib/rsp.s)
 foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
@@ -592,12 +593,12 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
-    set(OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
-    set(DEPENDENCY_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
+    set(OBJECT_FILE ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(DEPENDENCY_FILE ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
 
     # Add a custom command to compile the source file
     add_custom_command(
-        OUTPUT ${OBJECT_FILE}
+        OUTPUT ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o
         COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
         COMMAND gcc
             -fsyntax-only -fsigned-char -fno-builtin -nostdinc
@@ -607,8 +608,8 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${ABSOLUTE_BUILD_DIR}/
-            -I${ABSOLUTE_BUILD_DIR}/include/
+            -I${RELATIVE_BUILD_DIR}/
+            -I${RELATIVE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -m32 -MMD -MP -MT ${OBJECT_FILE}
@@ -620,8 +621,8 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
             -I${CMAKE_SOURCE_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/include/libc/
             -I${CMAKE_SOURCE_DIR}/src/
-            -I${ABSOLUTE_BUILD_DIR}/
-            -I${ABSOLUTE_BUILD_DIR}/include/
+            -I${RELATIVE_BUILD_DIR}/
+            -I${RELATIVE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
             -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
@@ -638,7 +639,7 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
     # Append the object file to the list of object files
     list(APPEND LIBULTRA_OBJECT_FILES ${OBJECT_FILE})
     string(REPLACE "/" "_" TARGET_NAME "elf_${RELATIVE_PATH}/${FILE_NAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OBJECT_FILE})
+    add_custom_target(${TARGET_NAME} DEPENDS ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
 endforeach()
 
 set(RELATIVE_LIBULTRA_OBJECT_FILES)
@@ -663,16 +664,16 @@ add_custom_command(
 add_custom_target(libultra ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/libultra.a)
 
 add_custom_target(armips_files)
-macro(armips_file INPUT_FILE OUTPUT_FILE)
-    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}.s" DIRECTORY)
-    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+macro(armips_file INPUT_FILE)
+    get_filename_component(INPUT_FILENAME ${INPUT_FILE} NAME_WE)
+    get_filename_component(INPUT_DIR ${INPUT_FILE} DIRECTORY)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${INPUT_DIR}")
 
     add_custom_command(
-        OUTPUT ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.bin
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
+        OUTPUT ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
         COMMAND ${CMAKE_SOURCE_DIR}/tools/armips
-        -sym ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin.sym
+        -sym ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin.sym
         # TODO
         -definelabel ${ROM_VERSION_STRING} 1
         -definelabel F3D_OLD 1
@@ -680,27 +681,23 @@ macro(armips_file INPUT_FILE OUTPUT_FILE)
         -definelabel AVOID_UB 1
         -definelabel _FINALROM 1
         -strequ CODE_FILE
-        ${OUTPUT_DIR}/${OUTPUT_FILENAME}.bin
+        ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin
         -strequ DATA_FILE
-        ${OUTPUT_DIR}/${OUTPUT_FILENAME}_data.bin
+        ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}_data.bin
         ${INPUT_FILE}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS armips ${INPUT_FILE}
         COMMENT "Assembling file ${INPUT_FILE}"
     )
-    add_custom_target(armips_${OUTPUT_FILENAME} ALL DEPENDS ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.bin)
-    add_dependencies(assemble_files armips_${OUTPUT_FILENAME})
+    # tools/armips -sym build/jp/rsp/rspboot.bin.sym -definelabel VERSION_JP 1 -definelabel F3D_OLD 1 -definelabel NON_MATCHING 1 -definelabel AVOID_UB 1 -definelabel _FINALROM 1 -strequ CODE_FILE build/jp/rsp/rspboot.bin -strequ DATA_FILE build/jp/rsp/rspboot_data.bin rsp/rspboot.s
+    add_custom_target(armips_${INPUT_FILENAME} ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin)
+    add_dependencies(armips_files armips_${INPUT_FILENAME})
 endmacro()
 
 file(GLOB RSP_ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/rsp/*.s")
 foreach(ASSEMBLY_FILE ${RSP_ASSEMBLY_FILES})
-    get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
-    get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-    armips_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}")
+    armips_file(${ASSEMBLY_FILE})
 endforeach()
-
-assemble_file("${CMAKE_SOURCE_DIR}/lib/rsp.s" "${ABSOLUTE_BUILD_DIR}/lib/rsp.o")
 
 # convert animations ----------------------------------------------------------
 add_custom_command(
@@ -2639,7 +2636,7 @@ add_custom_command(
     build/jp/src/engine/surface_collision.o build/jp/src/engine/behavior_script.o build/jp/src/engine/level_script.o build/jp/src/engine/stub.o build/jp/src/engine/graph_node_manager.o build/jp/src/engine/math_util.o build/jp/src/engine/geo_layout.o build/jp/src/engine/surface_load.o build/jp/src/engine/graph_node.o build/jp/src/game/screen_transition.o build/jp/src/game/mario_actions_automatic.o build/jp/src/game/mario_actions_stationary.o build/jp/src/game/mario_actions_object.o build/jp/src/game/cn_common_syms_1.o build/jp/src/game/obj_behaviors.o build/jp/src/game/object_collision.o build/jp/src/game/interaction.o build/jp/src/game/platform_displacement.o build/jp/src/game/area.o build/jp/src/game/spawn_sound.o build/jp/src/game/mario_actions_moving.o build/jp/src/game/sound_init.o build/jp/src/game/game_init.o build/jp/src/game/spawn_object.o build/jp/src/game/save_file.o build/jp/src/game/envfx_snow.o build/jp/src/game/skybox.o build/jp/src/game/crash_screen.o build/jp/src/game/behavior_actions.o build/jp/src/game/debug_course.o build/jp/src/game/mario_step.o build/jp/src/game/moving_texture.o build/jp/src/game/rumble_init.o build/jp/src/game/object_helpers.o build/jp/src/game/paintings.o build/jp/src/game/level_geo.o build/jp/src/game/camera.o build/jp/src/game/main.o build/jp/src/game/profiler.o build/jp/src/game/cn_common_syms_2.o build/jp/src/game/hud.o build/jp/src/game/memory.o build/jp/src/game/ingame_menu.o build/jp/src/game/geo_misc.o build/jp/src/game/object_list_processor.o build/jp/src/game/obj_behaviors_2.o build/jp/src/game/macro_special_objects.o build/jp/src/game/mario_actions_cutscene.o build/jp/src/game/envfx_bubbles.o build/jp/src/game/mario_misc.o build/jp/src/game/debug.o build/jp/src/game/mario_actions_submerged.o build/jp/src/game/print.o build/jp/src/game/mario_actions_airborne.o build/jp/src/game/mario.o build/jp/src/game/rendering_graph_node.o build/jp/src/game/shadow.o build/jp/src/game/level_update.o build/jp/src/audio/heap.o build/jp/src/audio/seqplayer.o build/jp/src/audio/shindou_debug_prints.o build/jp/src/audio/globals_start.o build/jp/src/audio/playback.o build/jp/src/audio/effects.o build/jp/src/audio/external.o build/jp/src/audio/load.o build/jp/src/audio/load_sh.o build/jp/src/audio/port_eu.o build/jp/src/audio/audio_session_presets_sh.o build/jp/src/audio/port_sh.o build/jp/src/audio/synthesis.o build/jp/src/audio/synthesis_sh.o build/jp/src/audio/data.o build/jp/src/menu/intro_geo.o build/jp/src/menu/title_screen.o build/jp/src/menu/star_select.o build/jp/src/menu/file_select.o build/jp/src/buffers/framebuffers.o build/jp/src/buffers/gfx_output_buffer.o build/jp/src/buffers/buffers.o build/jp/src/buffers/zbuffer.o build/jp/actors/group8_geo.o build/jp/actors/group4_geo.o build/jp/actors/group5.o build/jp/actors/group9_geo.o build/jp/actors/group2_geo.o build/jp/actors/group15.o build/jp/actors/group10.o build/jp/actors/group17.o build/jp/actors/group12_geo.o build/jp/actors/group6.o build/jp/actors/group15_geo.o build/jp/actors/group14.o build/jp/actors/common1.o build/jp/actors/group16.o build/jp/actors/group9.o build/jp/actors/group1.o build/jp/actors/common0_geo.o build/jp/actors/group7_geo.o build/jp/actors/group0_geo.o build/jp/actors/group13_geo.o build/jp/actors/group2.o build/jp/actors/group17_geo.o build/jp/actors/group5_geo.o build/jp/actors/group3_geo.o build/jp/actors/group3.o build/jp/actors/group11_geo.o build/jp/actors/group8.o build/jp/actors/group16_geo.o build/jp/actors/group12.o build/jp/actors/group4.o build/jp/actors/group7.o build/jp/actors/common0.o build/jp/actors/group10_geo.o build/jp/actors/group0.o build/jp/actors/group13.o build/jp/actors/group6_geo.o build/jp/actors/group14_geo.o build/jp/actors/common1_geo.o build/jp/actors/group11.o build/jp/actors/group1_geo.o build/jp/levels/scripts.o build/jp/levels/entry.o build/jp/bin/mountain.o build/jp/bin/machine.o build/jp/bin/grass.o build/jp/bin/water.o build/jp/bin/title_screen_bg.o build/jp/bin/debug_level_select.o build/jp/bin/sky.o build/jp/bin/inside.o build/jp/bin/generic.o build/jp/bin/spooky.o build/jp/bin/fire.o build/jp/bin/outside.o build/jp/bin/effect.o build/jp/bin/snow.o build/jp/bin/cave.o build/jp/bin/segment2.o build/jp/data/behavior_data.o build/jp/sound/sound_data.o build/jp/levels/bbh/leveldata.o build/jp/levels/castle_grounds/leveldata.o build/jp/levels/thi/leveldata.o build/jp/levels/wdw/leveldata.o build/jp/levels/ddd/leveldata.o build/jp/levels/castle_inside/leveldata.o build/jp/levels/bowser_2/leveldata.o build/jp/levels/lll/leveldata.o build/jp/levels/bowser_3/leveldata.o build/jp/levels/ending/leveldata.o build/jp/levels/menu/leveldata.o build/jp/levels/jrb/leveldata.o build/jp/levels/vcutm/leveldata.o build/jp/levels/hmc/leveldata.o build/jp/levels/bitdw/leveldata.o build/jp/levels/castle_courtyard/leveldata.o build/jp/levels/ttc/leveldata.o build/jp/levels/cotmc/leveldata.o build/jp/levels/rr/leveldata.o build/jp/levels/bitfs/leveldata.o build/jp/levels/wmotr/leveldata.o build/jp/levels/ttm/leveldata.o build/jp/levels/wf/leveldata.o build/jp/levels/bits/leveldata.o build/jp/levels/intro/leveldata.o build/jp/levels/bob/leveldata.o build/jp/levels/bowser_1/leveldata.o build/jp/levels/totwc/leveldata.o build/jp/levels/sa/leveldata.o build/jp/levels/pss/leveldata.o build/jp/levels/sl/leveldata.o build/jp/levels/ccm/leveldata.o build/jp/levels/ssl/leveldata.o build/jp/levels/bbh/script.o build/jp/levels/castle_grounds/script.o build/jp/levels/thi/script.o build/jp/levels/wdw/script.o build/jp/levels/ddd/script.o build/jp/levels/castle_inside/script.o build/jp/levels/bowser_2/script.o build/jp/levels/lll/script.o build/jp/levels/bowser_3/script.o build/jp/levels/ending/script.o build/jp/levels/menu/script.o build/jp/levels/jrb/script.o build/jp/levels/vcutm/script.o build/jp/levels/hmc/script.o build/jp/levels/bitdw/script.o build/jp/levels/castle_courtyard/script.o build/jp/levels/ttc/script.o build/jp/levels/cotmc/script.o build/jp/levels/rr/script.o build/jp/levels/bitfs/script.o build/jp/levels/wmotr/script.o build/jp/levels/ttm/script.o build/jp/levels/wf/script.o build/jp/levels/bits/script.o build/jp/levels/intro/script.o build/jp/levels/bob/script.o build/jp/levels/bowser_1/script.o build/jp/levels/totwc/script.o build/jp/levels/sa/script.o build/jp/levels/pss/script.o build/jp/levels/sl/script.o build/jp/levels/ccm/script.o build/jp/levels/ssl/script.o build/jp/levels/bbh/geo.o build/jp/levels/castle_grounds/geo.o build/jp/levels/thi/geo.o build/jp/levels/wdw/geo.o build/jp/levels/ddd/geo.o build/jp/levels/castle_inside/geo.o build/jp/levels/bowser_2/geo.o build/jp/levels/lll/geo.o build/jp/levels/bowser_3/geo.o build/jp/levels/ending/geo.o build/jp/levels/menu/geo.o build/jp/levels/jrb/geo.o build/jp/levels/vcutm/geo.o build/jp/levels/hmc/geo.o build/jp/levels/bitdw/geo.o build/jp/levels/castle_courtyard/geo.o build/jp/levels/ttc/geo.o build/jp/levels/cotmc/geo.o build/jp/levels/rr/geo.o build/jp/levels/bitfs/geo.o build/jp/levels/wmotr/geo.o build/jp/levels/ttm/geo.o build/jp/levels/wf/geo.o build/jp/levels/bits/geo.o build/jp/levels/intro/geo.o build/jp/levels/bob/geo.o build/jp/levels/bowser_1/geo.o build/jp/levels/totwc/geo.o build/jp/levels/sa/geo.o build/jp/levels/pss/geo.o build/jp/levels/sl/geo.o build/jp/levels/ccm/geo.o build/jp/levels/ssl/geo.o build/jp/asm/boot.o build/jp/asm/rom_header.o build/jp/asm/ipl3_font.o build/jp/asm/decompress.o build/jp/asm/entry.o build/jp/lib/rsp.o build/jp/assets/mario_anim_data.o build/jp/assets/demo_data.o
     -lultra -lgoddard -lgcc
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    DEPENDS ${SOURCE_FILE} goddard libgcc libultra
+    DEPENDS ${SOURCE_FILE} goddard libgcc libultra preprocess_sm64.ld assemble_files
     COMMENT "Building sm64.${ROM_VERSION}.elf"
 )
 add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})
