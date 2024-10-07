@@ -320,12 +320,12 @@ add_dependencies(generate_text_strings textconv)
 add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/include/text_menu_strings.h
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/include/
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${ABSOLUTE_BUILD_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_menu_strings.h.in ${ABSOLUTE_BUILD_DIR}/include/text_menu_strings.h
-    DEPENDS ${ABSOLUTE_BUILD_DIR}/${CHARMAP} ${CMAKE_SOURCE_DIR}/include/text_menu_strings.h.in textconv
-    COMMENT "Generating text_strings.h from textconv..."
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/textconv ${CMAKE_SOURCE_DIR}/charmap_menu.txt ${CMAKE_SOURCE_DIR}/include/text_menu_strings.h.in ${RELATIVE_BUILD_DIR}/include/text_menu_strings.h
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    DEPENDS ${CMAKE_SOURCE_DIR}/charmap_menu.txt ${CMAKE_SOURCE_DIR}/include/text_menu_strings.h.in textconv
+    COMMENT "Generating text_menu_strings.h from textconv..."
 )
 add_custom_target(generate_text_menu_strings ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/include/text_menu_strings.h)
-add_dependencies(generate_text_menu_strings textconv)
 
 # run assembler ---------------------------------------------------------------
 add_custom_target(assemble_files)
