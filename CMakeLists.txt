@@ -2633,7 +2633,86 @@ add_custom_command(
     -T ${RELATIVE_BUILD_DIR}/sm64.ld
     -Map ${RELATIVE_BUILD_DIR}/sm64.jp.map
     --no-check-sections
-    ${R_ELF_FILES}
+    #${R_ELF_FILES}
+    -R build/jp/bin/mountain.elf
+    -R build/jp/bin/machine.elf
+    -R build/jp/bin/grass.elf
+    -R build/jp/bin/water.elf
+    -R build/jp/bin/title_screen_bg.elf
+    -R build/jp/bin/debug_level_select.elf
+    -R build/jp/bin/sky.elf
+    -R build/jp/bin/inside.elf
+    -R build/jp/bin/generic.elf
+    -R build/jp/bin/spooky.elf
+    -R build/jp/bin/fire.elf
+    -R build/jp/bin/outside.elf
+    -R build/jp/bin/effect.elf
+    -R build/jp/bin/snow.elf
+    -R build/jp/bin/cave.elf
+    -R build/jp/bin/segment2.elf
+    -R build/jp/bin/clouds_skybox.elf
+    -R build/jp/bin/bitfs_skybox.elf
+    -R build/jp/bin/bits_skybox.elf
+    -R build/jp/bin/cloud_floor_skybox.elf
+    -R build/jp/bin/ccm_skybox.elf
+    -R build/jp/bin/water_skybox.elf
+    -R build/jp/bin/bidw_skybox.elf
+    -R build/jp/bin/bbh_skybox.elf
+    -R build/jp/bin/ssl_skybox.elf
+    -R build/jp/bin/wdw_skybox.elf
+    -R build/jp/actors/group0.elf
+    -R build/jp/actors/group1.elf
+    -R build/jp/actors/group2.elf
+    -R build/jp/actors/group3.elf
+    -R build/jp/actors/group4.elf
+    -R build/jp/actors/group5.elf
+    -R build/jp/actors/group6.elf
+    -R build/jp/actors/group7.elf
+    -R build/jp/actors/group8.elf
+    -R build/jp/actors/group9.elf
+    -R build/jp/actors/group10.elf
+    -R build/jp/actors/group11.elf
+    -R build/jp/actors/group12.elf
+    -R build/jp/actors/group13.elf
+    -R build/jp/actors/group14.elf
+    -R build/jp/actors/group15.elf
+    -R build/jp/actors/group16.elf
+    -R build/jp/actors/group17.elf
+    -R build/jp/actors/common0.elf
+    -R build/jp/actors/common1.elf
+    -R build/jp/levels/bbh/leveldata.elf
+    -R build/jp/levels/castle_grounds/leveldata.elf
+    -R build/jp/levels/thi/leveldata.elf
+    -R build/jp/levels/wdw/leveldata.elf
+    -R build/jp/levels/ddd/leveldata.elf
+    -R build/jp/levels/castle_inside/leveldata.elf
+    -R build/jp/levels/bowser_2/leveldata.elf
+    -R build/jp/levels/lll/leveldata.elf
+    -R build/jp/levels/bowser_3/leveldata.elf
+    -R build/jp/levels/ending/leveldata.elf
+    -R build/jp/levels/menu/leveldata.elf
+    -R build/jp/levels/jrb/leveldata.elf
+    -R build/jp/levels/vcutm/leveldata.elf
+    -R build/jp/levels/hmc/leveldata.elf
+    -R build/jp/levels/bitdw/leveldata.elf
+    -R build/jp/levels/castle_courtyard/leveldata.elf
+    -R build/jp/levels/ttc/leveldata.elf
+    -R build/jp/levels/cotmc/leveldata.elf
+    -R build/jp/levels/rr/leveldata.elf
+    -R build/jp/levels/bitfs/leveldata.elf
+    -R build/jp/levels/wmotr/leveldata.elf
+    -R build/jp/levels/ttm/leveldata.elf
+    -R build/jp/levels/wf/leveldata.elf
+    -R build/jp/levels/bits/leveldata.elf
+    -R build/jp/levels/intro/leveldata.elf
+    -R build/jp/levels/bob/leveldata.elf
+    -R build/jp/levels/bowser_1/leveldata.elf
+    -R build/jp/levels/totwc/leveldata.elf
+    -R build/jp/levels/sa/leveldata.elf
+    -R build/jp/levels/pss/leveldata.elf
+    -R build/jp/levels/sl/leveldata.elf
+    -R build/jp/levels/ccm/leveldata.elf
+    -R build/jp/levels/ssl/leveldata.elf
     -o ${RELATIVE_SM64_ELF}
     ${RELATIVE_OBJECT_FILES}
     # TODO
@@ -2645,67 +2724,35 @@ add_custom_command(
 )
 add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})
 
+add_custom_command(
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.jp.bin
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
+    # extract
+    COMMAND mips-linux-gnu-objcopy --pad-to=0x800000 --gap-fill=0xFF ${RELATIVE_SM64_ELF} ${RELATIVE_BUILD_DIR}/sm64.jp.bin -O binary
+    DEPENDS ${SM64_ELF}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+)
+add_custom_target(sm64_bin ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.jp.bin)
+
+add_custom_command(
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.jp.z64
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64cksum ${RELATIVE_BUILD_DIR}/sm64.jp.bin ${RELATIVE_BUILD_DIR}/sm64.jp.z64
+    DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.jp.bin n64cksum
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+)
+add_custom_target(sm64 ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.jp.z64)
+
 #message(FATAL_ERROR "${CMAKE_LINKER}
-#    -L${ABSOLUTE_BUILD_DIR}
+#    -L${RELATIVE_BUILD_DIR}
 #    -T ${CMAKE_SOURCE_DIR}/undefined_syms.txt
-#    -T ${ABSOLUTE_BUILD_DIR}/sm64.ld
-#    -Map ${ABSOLUTE_BUILD_DIR}/sm64.jp.map
+#    -T ${RELATIVE_BUILD_DIR}/sm64.ld
+#    -Map ${RELATIVE_BUILD_DIR}/sm64.jp.map
 #    --no-check-sections
 #    ${R_ELF_FILES}
-#    -o ${SM64_ELF}
+#    -o ${RELATIVE_SM64_ELF}
 #    ${RELATIVE_OBJECT_FILES}
 #    build/jp/asm/boot.o build/jp/asm/decompress.o build/jp/asm/entry.o build/jp/asm/ipl3_font.o build/jp/asm/rom_header.o build/jp/assets/demo_data.o build/jp/assets/mario_anim_data.o build/jp/bin/cave.o build/jp/bin/debug_level_select.o build/jp/bin/effect.o build/jp/bin/fire.o build/jp/bin/generic.o build/jp/bin/grass.o build/jp/bin/inside.o build/jp/bin/machine.o build/jp/bin/mountain.o build/jp/bin/outside.o build/jp/bin/segment2.o build/jp/bin/sky.o build/jp/bin/snow.o build/jp/bin/spooky.o build/jp/bin/title_screen_bg.o build/jp/bin/water.o build/jp/lib/rsp.o
 #    -lultra -lgoddard -lgcc")
-
-#add_executable(sm64 ${OBJECT_FILES})
-#set_target_properties(sm64 PROPERTIES LINKER_LANGUAGE C)
-##add_executable(sm64 ${SM64_HEADERS} ${SM64_SOURCES})
-#add_dependencies(sm64 elf_target)
-
-# configure targets ------------------------------------------------------------
-#target_include_directories(sm64
-#    PRIVATE
-#    ${CMAKE_SOURCE_DIR}/include/
-#    ${CMAKE_SOURCE_DIR}/include/libc/
-#    ${CMAKE_SOURCE_DIR}/src/
-#    ${ABSOLUTE_BUILD_DIR}/
-#    ${ABSOLUTE_BUILD_DIR}/include/
-#    ${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-#)
-
-# link targets -----------------------------------------------------------------
-#target_link_libraries(sm64
-#    PRIVATE
-#)
-
-#get_target_property(COMPILE_OPTIONS sm64 COMPILE_OPTIONS)
-#if(COMPILE_OPTIONS)
-#    string(JOIN " " COMPILE_OPTIONS_STR ${COMPILE_OPTIONS})
-#else()
-#    set(COMPILE_OPTIONS_STR "")
-#endif()
-#message(STATUS "Compile options: ${COMPILE_OPTIONS_STR}")
-#
-#get_directory_property(GLOBAL_COMPILE_OPTIONS DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_OPTIONS)
-#if(GLOBAL_COMPILE_OPTIONS)
-#    string(JOIN " " GLOBAL_COMPILE_OPTIONS_STR ${GLOBAL_COMPILE_OPTIONS})
-#else()
-#    set(GLOBAL_COMPILE_OPTIONS_STR "")
-#endif()
-#message(STATUS "Global compile options: ${GLOBAL_COMPILE_OPTIONS_STR}")
-#
-#get_directory_property(GLOBAL_COMPILE_DEFINITIONS DIRECTORY ${CMAKE_SOURCE_DIR} COMPILE_DEFINITIONS)
-#if(GLOBAL_COMPILE_DEFINITIONS)
-#    string(JOIN " " GLOBAL_COMPILE_DEFINITIONS_STR ${GLOBAL_COMPILE_DEFINITIONS})
-#else()
-#    set(GLOBAL_COMPILE_DEFINITIONS_STR "")
-#endif()
-#message(STATUS "Global compile definitions: ${GLOBAL_COMPILE_DEFINITIONS_STR}")
-#
-#get_target_property(LINK_OPTIONS sm64 LINK_OPTIONS)
-#if(LINK_OPTIONS)
-#    string(JOIN " " LINK_OPTIONS_STR ${LINK_OPTIONS})
-#else()
-#    set(LINK_OPTIONS_STR "")
-#endif()
-#message(STATUS "Linker options: ${LINK_OPTIONS_STR}")
