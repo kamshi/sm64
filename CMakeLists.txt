@@ -149,16 +149,40 @@ add_definitions(${SM64_COMPILE_DEFINITIONS})
 #endif
 
 # extract assets --------------------------------------------------------------
-include(actors_jp.cmake)
+if("${ROM_VERSION}" STREQUAL "jp")
+    include(actors_jp.cmake)
 
-add_custom_command(
-    OUTPUT ${ASSETS_JP}
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/extract_assets.py ${ROM_VERSION}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    DEPENDS ${CMAKE_SOURCE_DIR}/extract_assets.py
-    COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/extract_assets.py..."
-)
-add_custom_target(extract_assets DEPENDS ${ASSETS_JP})
+    add_custom_command(
+        OUTPUT ${ASSETS_JP}
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/extract_assets.py ${ROM_VERSION}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        DEPENDS ${CMAKE_SOURCE_DIR}/extract_assets.py
+        COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/extract_assets.py..."
+    )
+    add_custom_target(extract_assets DEPENDS ${ASSETS_JP})
+elseif("${ROM_VERSION}" STREQUAL "eu")
+    include(actors_eu.cmake)
+
+    add_custom_command(
+        OUTPUT ${ASSETS_EU}
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/extract_assets.py ${ROM_VERSION}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        DEPENDS ${CMAKE_SOURCE_DIR}/extract_assets.py
+        COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/extract_assets.py..."
+    )
+    add_custom_target(extract_assets DEPENDS ${ASSETS_EU})
+elseif("${ROM_VERSION}" STREQUAL "us")
+    include(actors_us.cmake)
+
+    add_custom_command(
+        OUTPUT ${ASSETS_US}
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/extract_assets.py ${ROM_VERSION}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        DEPENDS ${CMAKE_SOURCE_DIR}/extract_assets.py
+        COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/extract_assets.py..."
+    )
+    add_custom_target(extract_assets DEPENDS ${ASSETS_US})
+endif()
 
 set(CHARMAP charmap.txt)
 add_custom_command(
@@ -611,7 +635,7 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
             -I${RELATIVE_BUILD_DIR}/
             -I${RELATIVE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+            -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -m32 -MMD -MP -MT ${OBJECT_FILE}
             -MF ${DEPENDENCY_FILE}
             ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
@@ -624,7 +648,7 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
             -I${RELATIVE_BUILD_DIR}/
             -I${RELATIVE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+            -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
             -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
             -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
@@ -2194,7 +2218,7 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
             -I${RELATIVE_BUILD_DIR}/
             -I${RELATIVE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+            -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -m32 -MMD -MP -MT ${OBJECT_FILE}
             -MF ${DEPENDENCY_FILE}
             ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
@@ -2207,7 +2231,7 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
             -I${RELATIVE_BUILD_DIR}/
             -I${RELATIVE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+            -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
             -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
             -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
@@ -2286,7 +2310,7 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
             -I${ABSOLUTE_BUILD_DIR}/
             -I${ABSOLUTE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+            -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -m32 -MMD -MP -MT ${OBJECT_FILE}
             -MF ${DEPENDENCY_FILE}
             ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
@@ -2299,7 +2323,7 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
             -I${ABSOLUTE_BUILD_DIR}/
             -I${ABSOLUTE_BUILD_DIR}/include/
             -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-            -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+            -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
             -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
             -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
             -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
@@ -2357,7 +2381,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
                 -I${ABSOLUTE_BUILD_DIR}/bin
                 -I${ABSOLUTE_BUILD_DIR}/include
                 -I${CMAKE_SOURCE_DIR}/ # TODO: fix includes instead of adding this path
-                -DVERSION_JP=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
+                -D${ROM_VERSION_STRING}=1 -DF3D_OLD=1 -DNON_MATCHING=1 -DAVOID_UB=1 -D_FINALROM=1
                 -mno-shared -march=vr4300 -mfix4300 -mabi=32 -mhard-float -mdivide-breaks
                 -fno-stack-protector -fno-common -fno-zero-initialized-in-bss
                 -fno-PIC -mno-abicalls -fno-strict-aliasing -fno-inline-functions
