@@ -2627,7 +2627,7 @@ add_custom_command(
     -L${RELATIVE_BUILD_DIR}
     -T undefined_syms.txt
     -T ${RELATIVE_BUILD_DIR}/sm64.ld
-    -Map ${RELATIVE_BUILD_DIR}/sm64.jp.map
+    -Map ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.map
     --no-check-sections
     #${R_ELF_FILES}
     -R build/${ROM_VERSION}/bin/mountain.elf -R build/${ROM_VERSION}/bin/machine.elf -R build/${ROM_VERSION}/bin/grass.elf -R build/${ROM_VERSION}/bin/water.elf -R build/${ROM_VERSION}/bin/title_screen_bg.elf -R build/${ROM_VERSION}/bin/debug_level_select.elf -R build/${ROM_VERSION}/bin/sky.elf -R build/${ROM_VERSION}/bin/inside.elf -R build/${ROM_VERSION}/bin/generic.elf -R build/${ROM_VERSION}/bin/spooky.elf -R build/${ROM_VERSION}/bin/fire.elf -R build/${ROM_VERSION}/bin/outside.elf -R build/${ROM_VERSION}/bin/effect.elf -R build/${ROM_VERSION}/bin/snow.elf -R build/${ROM_VERSION}/bin/cave.elf -R build/${ROM_VERSION}/bin/segment2.elf -R build/${ROM_VERSION}/bin/clouds_skybox.elf -R build/${ROM_VERSION}/bin/bitfs_skybox.elf -R build/${ROM_VERSION}/bin/bits_skybox.elf -R build/${ROM_VERSION}/bin/cloud_floor_skybox.elf -R build/${ROM_VERSION}/bin/ccm_skybox.elf -R build/${ROM_VERSION}/bin/water_skybox.elf -R build/${ROM_VERSION}/bin/bidw_skybox.elf -R build/${ROM_VERSION}/bin/bbh_skybox.elf -R build/${ROM_VERSION}/bin/ssl_skybox.elf -R build/${ROM_VERSION}/bin/wdw_skybox.elf -R build/${ROM_VERSION}/actors/group0.elf -R build/${ROM_VERSION}/actors/group1.elf -R build/${ROM_VERSION}/actors/group2.elf -R build/${ROM_VERSION}/actors/group3.elf -R build/${ROM_VERSION}/actors/group4.elf -R build/${ROM_VERSION}/actors/group5.elf -R build/${ROM_VERSION}/actors/group6.elf -R build/${ROM_VERSION}/actors/group7.elf -R build/${ROM_VERSION}/actors/group8.elf -R build/${ROM_VERSION}/actors/group9.elf -R build/${ROM_VERSION}/actors/group10.elf -R build/${ROM_VERSION}/actors/group11.elf -R build/${ROM_VERSION}/actors/group12.elf -R build/${ROM_VERSION}/actors/group13.elf -R build/${ROM_VERSION}/actors/group14.elf -R build/${ROM_VERSION}/actors/group15.elf -R build/${ROM_VERSION}/actors/group16.elf -R build/${ROM_VERSION}/actors/group17.elf -R build/${ROM_VERSION}/actors/common0.elf -R build/${ROM_VERSION}/actors/common1.elf -R build/${ROM_VERSION}/levels/bbh/leveldata.elf -R build/${ROM_VERSION}/levels/castle_grounds/leveldata.elf -R build/${ROM_VERSION}/levels/thi/leveldata.elf -R build/${ROM_VERSION}/levels/wdw/leveldata.elf -R build/${ROM_VERSION}/levels/ddd/leveldata.elf -R build/${ROM_VERSION}/levels/castle_inside/leveldata.elf -R build/${ROM_VERSION}/levels/bowser_2/leveldata.elf -R build/${ROM_VERSION}/levels/lll/leveldata.elf -R build/${ROM_VERSION}/levels/bowser_3/leveldata.elf -R build/${ROM_VERSION}/levels/ending/leveldata.elf -R build/${ROM_VERSION}/levels/menu/leveldata.elf -R build/${ROM_VERSION}/levels/jrb/leveldata.elf -R build/${ROM_VERSION}/levels/vcutm/leveldata.elf -R build/${ROM_VERSION}/levels/hmc/leveldata.elf -R build/${ROM_VERSION}/levels/bitdw/leveldata.elf -R build/${ROM_VERSION}/levels/castle_courtyard/leveldata.elf -R build/${ROM_VERSION}/levels/ttc/leveldata.elf -R build/${ROM_VERSION}/levels/cotmc/leveldata.elf -R build/${ROM_VERSION}/levels/rr/leveldata.elf -R build/${ROM_VERSION}/levels/bitfs/leveldata.elf -R build/${ROM_VERSION}/levels/wmotr/leveldata.elf -R build/${ROM_VERSION}/levels/ttm/leveldata.elf -R build/${ROM_VERSION}/levels/wf/leveldata.elf -R build/${ROM_VERSION}/levels/bits/leveldata.elf -R build/${ROM_VERSION}/levels/intro/leveldata.elf -R build/${ROM_VERSION}/levels/bob/leveldata.elf -R build/${ROM_VERSION}/levels/bowser_1/leveldata.elf -R build/${ROM_VERSION}/levels/totwc/leveldata.elf -R build/${ROM_VERSION}/levels/sa/leveldata.elf -R build/${ROM_VERSION}/levels/pss/leveldata.elf -R build/${ROM_VERSION}/levels/sl/leveldata.elf -R build/${ROM_VERSION}/levels/ccm/leveldata.elf -R build/${ROM_VERSION}/levels/ssl/leveldata.elf
@@ -2641,22 +2641,22 @@ add_custom_command(
 add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})
 
 add_custom_command(
-    OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.jp.bin
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.bin
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # extract
-    COMMAND ${CMAKE_OBJCOPY} --pad-to=0x800000 --gap-fill=0xFF ${RELATIVE_SM64_ELF} ${RELATIVE_BUILD_DIR}/sm64.jp.bin -O binary
+    COMMAND ${CMAKE_OBJCOPY} --pad-to=0x800000 --gap-fill=0xFF ${RELATIVE_SM64_ELF} ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.bin -O binary
     DEPENDS ${SM64_ELF}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
 )
-add_custom_target(sm64_bin ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.jp.bin)
+add_custom_target(sm64_bin ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.bin)
 
 add_custom_command(
-    OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.jp.z64
+    OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.z64
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
-    COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64cksum ${RELATIVE_BUILD_DIR}/sm64.jp.bin ${RELATIVE_BUILD_DIR}/sm64.jp.z64
-    DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.jp.bin n64cksum
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64cksum ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.bin ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.z64
+    DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.bin n64cksum
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
 )
-add_custom_target(sm64 ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.jp.z64)
+add_custom_target(sm64 ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.z64)
