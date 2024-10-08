@@ -9,6 +9,7 @@ set(CMAKE_LINKER mips-linux-gnu-ld)
 set(CMAKE_ASM_COMPILER mips-linux-gnu-as)
 set(CMAKE_AR mips-linux-gnu-ar)
 set(CMAKE_RANLIB mips-linux-gnu-ranlib)
+set(CMAKE_OBJCOPY mips-linux-gnu-objcopy)
 set(CMAKE_NM mips-linux-gnu-nm)
 
 # optionally, specify the sysroot if available

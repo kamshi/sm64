@@ -352,7 +352,7 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
                 -D_FINALROM=1
                 -o ${OUTPUT_FILE}.temp
                 ${INPUT_FILE}
-        COMMAND mips-linux-gnu-as
+        COMMAND ${CMAKE_ASM_COMPILER}
                 -march=vr4300 -mabi=32
                 -I${CMAKE_SOURCE_DIR}/include
                 -I${ABSOLUTE_BUILD_DIR}
@@ -379,7 +379,7 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
 endmacro()
 
 file(GLOB ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/asm/*.s")
-list(APPEND ASSEMBLY_FILES lib/rsp.s)
+list(APPEND ASSEMBLY_FILES lib/rsp.s) # TODO: depends on armips_files
 foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
@@ -411,7 +411,7 @@ macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
                 -D_FINALROM=1
                 -o ${OUTPUT_FILE}.temp
                 ${INPUT_FILE}
-        COMMAND mips-linux-gnu-as
+        COMMAND ${CMAKE_ASM_COMPILER}
                 -march=vr4300 -mabi=32
                 -I${CMAKE_SOURCE_DIR}/include
                 -I${ABSOLUTE_BUILD_DIR}
@@ -652,7 +652,7 @@ add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/libultra.a
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # link
-    COMMAND mips-linux-gnu-ar
+    COMMAND ${CMAKE_AR}
             rcs -o ${RELATIVE_BUILD_DIR}/libultra.a
             ${RELATIVE_LIBULTRA_OBJECT_FILES}
     COMMAND ${CMAKE_SOURCE_DIR}/tools/patch_elf_32bit ${RELATIVE_BUILD_DIR}/libultra.a
@@ -887,7 +887,7 @@ add_custom_command(
         -D_FINALROM=1
         -o ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.temp
         ${CMAKE_SOURCE_DIR}/sound/sequences/00_sound_player.s
-    COMMAND mips-linux-gnu-as
+    COMMAND ${CMAKE_ASM_COMPILER}
             -march=vr4300 -mabi=32
             -I${CMAKE_SOURCE_DIR}/include
             -I${ABSOLUTE_BUILD_DIR}
@@ -904,7 +904,7 @@ add_custom_command(
             -MD ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.d
             -o ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.o
             ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.temp
-    COMMAND mips-linux-gnu-objcopy # TODO: use variable
+    COMMAND ${CMAKE_OBJCOPY} # TODO: use variable
         -j .rodata
         ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.o
         -O binary
@@ -2236,7 +2236,7 @@ add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/libgoddard.a
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # link
-    COMMAND mips-linux-gnu-ar
+    COMMAND ${CMAKE_AR}
             rcs -o ${RELATIVE_BUILD_DIR}/libgoddard.a
             ${RELATIVE_GODDARD_OBJECT_FILES}  # Input object file
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
@@ -2250,7 +2250,7 @@ add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/libgcc.a
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # link
-    COMMAND mips-linux-gnu-ar rcs -o ${ABSOLUTE_BUILD_DIR}/libgcc.a
+    COMMAND ${CMAKE_AR} rcs -o ${ABSOLUTE_BUILD_DIR}/libgcc.a
     COMMENT "Linking libgcc"
 )
 
@@ -2371,7 +2371,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
                     -o ${OUTPUT_ELF}
                     ${OBJECT_FILE}  # Input object file
             # extract
-            COMMAND mips-linux-gnu-objcopy -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
+            COMMAND ${CMAKE_OBJCOPY} -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
             # compress
             COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/mio0 ${OUTPUT_BIN} ${OUTPUT_MIO0}
             # to object file
@@ -2392,7 +2392,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
                     -o ${OUTPUT_ELF}
                     ${OBJECT_FILE}  # Input object file
             # extract
-            COMMAND mips-linux-gnu-objcopy -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
+            COMMAND ${CMAKE_OBJCOPY} -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
             # compress
             COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/mio0 ${OUTPUT_BIN} ${OUTPUT_MIO0}
             # to object file
@@ -2442,7 +2442,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
                 -o ${OUTPUT_ELF}
                 ${OBJECT_FILE}  # Input object file
         # extract
-        COMMAND mips-linux-gnu-objcopy -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
+        COMMAND ${CMAKE_OBJCOPY} -O binary --only-section=.data ${OUTPUT_ELF} ${OUTPUT_BIN}
         # compress
         COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/mio0 ${OUTPUT_BIN} ${OUTPUT_MIO0}
         # to object file
@@ -2645,7 +2645,7 @@ add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.jp.bin
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}
     # extract
-    COMMAND mips-linux-gnu-objcopy --pad-to=0x800000 --gap-fill=0xFF ${RELATIVE_SM64_ELF} ${RELATIVE_BUILD_DIR}/sm64.jp.bin -O binary
+    COMMAND ${CMAKE_OBJCOPY} --pad-to=0x800000 --gap-fill=0xFF ${RELATIVE_SM64_ELF} ${RELATIVE_BUILD_DIR}/sm64.jp.bin -O binary
     DEPENDS ${SM64_ELF}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
