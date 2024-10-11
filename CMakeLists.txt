@@ -205,7 +205,7 @@ add_custom_command(
 add_custom_target(generate_text_menu_strings ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/include/text_menu_strings.h)
 
 # run assembler ---------------------------------------------------------------
-add_custom_target(assemble_files)
+set(ASSEMBLED_FILES)
 macro(assemble_file INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
@@ -250,9 +250,8 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
         DEPENDS ${INPUT_FILE}
         COMMENT "Assembling file ${INPUT_FILE}"
     )
-    string(REPLACE "/" "_" TARGET_NAME "assemble${INPUT_FILE}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME})
-    add_dependencies(assemble_files ${TARGET_NAME})
+    
+    list(APPEND ASSEMBLED_FILES ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME})
 endmacro()
 
 file(GLOB ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/asm/*.s")
@@ -263,10 +262,11 @@ foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
     assemble_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
+add_custom_target(assemble_files DEPENDS ${ASSEMBLED_FILES})
 
 include(libultra.cmake)
 
-add_custom_target(armips_files)
+set(ARMIPS_FILES)
 macro(armips_file INPUT_FILE)
     get_filename_component(INPUT_FILENAME ${INPUT_FILE} NAME_WE)
     get_filename_component(INPUT_DIR ${INPUT_FILE} DIRECTORY)
@@ -292,14 +292,15 @@ macro(armips_file INPUT_FILE)
         DEPENDS armips ${INPUT_FILE}
         COMMENT "Assembling file ${INPUT_FILE}"
     )
-    add_custom_target(armips_${INPUT_FILENAME} ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin)
-    add_dependencies(armips_files armips_${INPUT_FILENAME})
+
+    list(APPEND ARMIPS_FILES ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin)
 endmacro()
 
 file(GLOB RSP_ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/rsp/*.s")
 foreach(ASSEMBLY_FILE ${RSP_ASSEMBLY_FILES})
     armips_file(${ASSEMBLY_FILE})
 endforeach()
+add_custom_target(armips_files DEPENDS ${ARMIPS_FILES})
 
 # convert animations ----------------------------------------------------------
 include(convert_mario_animations.cmake)
@@ -363,8 +364,7 @@ add_custom_target(assemble_sound_player ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sound/
 include(convert_sequences.cmake)
 
 # convert textures ------------------------------------------------------------
-add_custom_target(convert_textures)
-
+set(CONVERTED_TEXTURES)
 macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
@@ -382,10 +382,8 @@ macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
-    add_dependencies(${TARGET_NAME} n64graphics)
-    add_dependencies(convert_textures ${TARGET_NAME})
+    
+    list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
 endmacro()
 
 macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
@@ -405,10 +403,8 @@ macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
-    add_dependencies(${TARGET_NAME} n64graphics)
-    add_dependencies(convert_textures ${TARGET_NAME})
+
+    list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
 endmacro()
 
 macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
@@ -428,10 +424,8 @@ macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE})
-    add_dependencies(${TARGET_NAME} n64graphics)
-    add_dependencies(convert_textures ${TARGET_NAME})
+
+    list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE})
 endmacro()
 
 macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
@@ -451,10 +445,8 @@ macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
-    add_dependencies(${TARGET_NAME} n64graphics)
-    add_dependencies(convert_textures ${TARGET_NAME})
+
+    list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
 endmacro()
 
 macro(convert_texture_ia8 INPUT_FILE OUTPUT_FILE)
@@ -469,10 +461,8 @@ macro(convert_texture_ia8 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
-    add_dependencies(${TARGET_NAME} n64graphics)
-    add_dependencies(convert_textures ${TARGET_NAME})
+    
+    list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
 endmacro()
 
 macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
@@ -492,10 +482,8 @@ macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
-    add_dependencies(${TARGET_NAME} n64graphics)
-    add_dependencies(convert_textures ${TARGET_NAME})
+
+    list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
 endmacro()
 
 macro(convert_texture_rgba16 INPUT_FILE OUTPUT_FILE)
@@ -515,10 +503,8 @@ macro(convert_texture_rgba16 INPUT_FILE OUTPUT_FILE)
         #DEPENDS extract_assets
         COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
     )
-    string(REPLACE "/" "_" TARGET_NAME "convert_texture_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE}.inc.c)
-    add_dependencies(${TARGET_NAME} n64graphics)
-    add_dependencies(convert_textures ${TARGET_NAME})
+
+    list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
 endmacro()
 
 set(TEXTURE_DIR ${CMAKE_SOURCE_DIR}/actors)
@@ -704,82 +690,14 @@ foreach(LEVEL_DIRECTORY ${LEVEL_DIRECTORIES})
         endif()
     endforeach()
 endforeach()
+add_custom_target(convert_textures DEPENDS ${CONVERTED_TEXTURES})
+add_dependencies(convert_textures n64graphics)
 
 # skyboxes --------------------------------------------------------------------
-add_custom_target(convert_skyboxes)
-macro(convert_skybox INPUT_FILE OUTPUT_FILE)
-    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
-    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-
-    add_custom_command(
-        OUTPUT ${OUTPUT_FILE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${CMAKE_SOURCE_DIR}/tools/skyconv
-        --type sky
-        --split ${INPUT_FILE}
-        ${OUTPUT_DIR}
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting skybox: ${INPUT_FILE} -> ${OUTPUT_FILE}"
-    )
-    string(REPLACE "/" "_" TARGET_NAME "convert_skybox_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE})
-    add_dependencies(${TARGET_NAME} skyconv)
-    add_dependencies(convert_skyboxes ${TARGET_NAME})
-endmacro()
-
-set(SKYBOX_DIRECTORIES
-    textures/skyboxes
-)
-
-foreach(SKYBOX_DIRECTORY ${SKYBOX_DIRECTORIES})
-    file(GLOB PNG_FILES "${SKYBOX_DIRECTORY}/*.png")
-    foreach(PNG_FILE ${PNG_FILES})
-        get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
-        get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-        string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-        convert_skybox(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/bin/${OUTPUT_FILENAME}_skybox")
-    endforeach()
-endforeach()
+include(convert_skyboxes.cmake)
 
 # cakes -----------------------------------------------------------------------
-add_custom_target(convert_cakes)
-macro(convert_cake INPUT_FILE OUTPUT_FILE)
-    get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
-    get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-
-    add_custom_command(
-        OUTPUT ${OUTPUT_FILE}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
-        COMMAND ${CMAKE_SOURCE_DIR}/tools/skyconv
-        --type cake
-        --split ${INPUT_FILE}
-        ${OUTPUT_DIR}
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting cake: ${INPUT_FILE} -> ${OUTPUT_FILE}"
-    )
-    string(REPLACE "/" "_" TARGET_NAME "convert_cake_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OUTPUT_FILE})
-    add_dependencies(${TARGET_NAME} skyconv)
-    add_dependencies(convert_cakes ${TARGET_NAME})
-endmacro()
-
-set(CAKE_DIRECTORIES
-    levels/ending
-)
-
-foreach(CAKE_DIRECTORY ${CAKE_DIRECTORIES})
-    file(GLOB PNG_FILES "${CAKE_DIRECTORY}/*.png")
-    foreach(PNG_FILE ${PNG_FILES})
-        get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
-        get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-        string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-        convert_cake(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/levels/ending/${OUTPUT_FILENAME}.inc.c")
-    endforeach()
-endforeach()
+include(convert_cakes.cmake)
 
 set(SM64_AUDIO_HEADERS
     src/audio/data.h
@@ -1514,7 +1432,7 @@ set(ELF_FILES)
 set(OBJECT_FILES)
 
 # Loop through source files to create individual targets
-add_custom_target(elf_target)
+set(ELF_TARGETS)
 foreach(SOURCE_FILE ${SM64_SOURCES})
     # Get the filename without extension
     get_filename_component(FILE_NAME ${SOURCE_FILE} NAME_WE)
@@ -1566,12 +1484,12 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
 
     # Append the object file to the list of object files
     list(APPEND OBJECT_FILES ${OBJECT_FILE})
-    string(REPLACE "/" "_" TARGET_NAME "elf_${RELATIVE_PATH}/${FILE_NAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OBJECT_FILE} generate_text_strings generate_text_menu_strings generate_level_headers)
-    add_dependencies(elf_target ${TARGET_NAME})
+    list(APPEND ELF_TARGETS ${OBJECT_FILE})
 endforeach()
+add_custom_target(elf_target DEPENDS ${ELF_TARGETS})
+add_dependencies(elf_target generate_text_strings generate_text_menu_strings generate_level_headers)
 
-add_custom_target(link_elfs)
+set(LINKED_ELFS)
 macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
@@ -1632,6 +1550,7 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             DEPENDS ${INPUT_FILE}
             COMMENT "Compiling and linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
         )
+        list(APPEND LINKED_ELFS ${ABS_OBJECT_FILE} ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o)
     else()
         add_custom_command(
             OUTPUT ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o
@@ -1653,15 +1572,9 @@ macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
             DEPENDS ${INPUT_FILE}
             COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
         )
+        list(APPEND LINKED_ELFS ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o)
     endif()
-
     list(APPEND ELF_FILES ${OUTPUT_ELF})
-
-    # Create a custom target to link the ELF file
-    string(REPLACE "/" "_" TARGET_NAME "mio0_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${ABS_OUTPUT_MIO0}.o)
-    add_dependencies(${TARGET_NAME} mio0 elf_target)
-    add_dependencies(link_elfs ${TARGET_NAME})
 endmacro()
 
 macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
@@ -1703,16 +1616,11 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
     )
-
+    list(APPEND LINKED_ELFS ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_BIN} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o)
     list(APPEND ELF_FILES ${OUTPUT_ELF})
-
-    # Create a custom target to link the ELF file
-    string(REPLACE "/" "_" TARGET_NAME "mio0_${RELATIVE_PATH}/${OUTPUT_FILENAME}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${ABS_OUTPUT_MIO0}.o)
-    #add_dependencies(${OUTPUT_FILENAME} mio0 convert_textures) # TODO: slow
-    add_dependencies(${TARGET_NAME} mio0 elf_target)
-    add_dependencies(link_elfs ${TARGET_NAME})
 endmacro()
+add_custom_target(link_elfs DEPENDS ${LINKED_ELFS})
+add_dependencies(link_elfs mio0)
 
 # bin/*.c ---------------------------------------------------------------------
 file(GLOB_RECURSE BIN_SOURCE_FILES "${CMAKE_SOURCE_DIR}/bin/*.c")
