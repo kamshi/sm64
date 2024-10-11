@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-add_custom_target(encode_sounds)
+set(ENCODED_SOUNDS)
 macro(encode_sound INPUT_FILE)
     get_filename_component(OUTPUT_DIR "${INPUT_FILE}" DIRECTORY)
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
@@ -32,9 +32,7 @@ macro(encode_sound INPUT_FILE)
         )
     endif()
 
-    string(REPLACE "/" "_" TARGET_NAME "encode_sound${RELATIVE_PATH}/${MODIFIED_FILENAME}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc)
-    add_dependencies(encode_sounds ${TARGET_NAME})
+    list(APPEND ENCODED_SOUNDS "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc")
 endmacro()
 
 set(SOUNDS_DIR ${CMAKE_SOURCE_DIR}/sound/samples)
@@ -45,3 +43,5 @@ foreach(SOUND_FILE ${SOUND_FILES})
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
     encode_sound(${OUTPUT_DIR}/${OUTPUT_FILENAME}.aiff)
 endforeach()
+
+add_custom_target(encode_sounds DEPENDS ${ENCODED_SOUNDS})
