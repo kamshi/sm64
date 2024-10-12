@@ -21,17 +21,11 @@ macro(convert_skybox INPUT_FILE OUTPUT_FILE)
     list(APPEND CONVERTED_SKYBOXES ${OUTPUT_FILE})
 endmacro()
 
-set(SKYBOX_DIRECTORIES
-    textures/skyboxes
-)
-
-foreach(SKYBOX_DIRECTORY ${SKYBOX_DIRECTORIES})
-    file(GLOB PNG_FILES "${SKYBOX_DIRECTORY}/*.png")
-    foreach(PNG_FILE ${PNG_FILES})
-        get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
-        get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-        string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-        convert_skybox(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/bin/${OUTPUT_FILENAME}_skybox")
-    endforeach()
+include(skybox_pngs_${ROM_VERSION}.cmake)
+foreach(PNG_FILE ${SKYBOX_PNGS})
+    get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
+    get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    convert_skybox(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/bin/${OUTPUT_FILENAME}_skybox")
 endforeach()
 add_custom_target(convert_skyboxes DEPENDS ${CONVERTED_SKYBOXES})

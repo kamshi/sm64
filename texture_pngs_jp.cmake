@@ -530,16 +530,17 @@ set(TEXTURE_PNGS_JP
     ${CMAKE_SOURCE_DIR}/textures/sky/rr_textures.07000.rgba16.png
     ${CMAKE_SOURCE_DIR}/textures/sky/rr_textures.07800.rgba16.png
     ${CMAKE_SOURCE_DIR}/textures/sky/rr_textures.08000.rgba16.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/bbh.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/bidw.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/bitfs.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/bits.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/ccm.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/clouds.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/cloud_floor.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/ssl.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/water.png
-    ${CMAKE_SOURCE_DIR}/textures/skyboxes/wdw.png
+    # skyboxes are processed in convert_skyboxes.cmake
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/bbh.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/bidw.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/bitfs.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/bits.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/ccm.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/clouds.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/cloud_floor.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/ssl.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/water.png
+    #${CMAKE_SOURCE_DIR}/textures/skyboxes/wdw.png
     ${CMAKE_SOURCE_DIR}/textures/snow/ccm_textures.00000.rgba16.png
     ${CMAKE_SOURCE_DIR}/textures/snow/ccm_textures.00800.rgba16.png
     ${CMAKE_SOURCE_DIR}/textures/snow/ccm_textures.01000.rgba16.png
