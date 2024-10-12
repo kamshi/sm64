@@ -170,6 +170,7 @@ add_custom_command(
     COMMENT "Preprocessing define_text.inc.c"
 )
 add_custom_target(preprocess_define_text.inc.c ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/text/${ROM_VERSION}/define_text.inc.c)
+add_dependencies(preprocess_define_text.inc.c preprocess_charmap)
 
 add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/text/debug_text.raw.inc.c
@@ -188,6 +189,7 @@ add_custom_command(
     COMMENT "Preprocessing debug_text.inc.c"
 )
 add_custom_target(preprocess_debug_text.inc.c ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/text/debug_text.raw.inc.c)
+add_dependencies(preprocess_debug_text.inc.c preprocess_define_text.inc.c preprocess_charmap_debug)
 
 include(preprocess_level_rules.cmake)
 include(preprocess_sm64.ld.cmake)
@@ -665,7 +667,7 @@ foreach(PNG_FILE ${LEVEL_PNGS})
     endif()
 endforeach()
 add_custom_target(convert_textures DEPENDS ${CONVERTED_TEXTURES})
-add_dependencies(convert_textures n64graphics)
+add_dependencies(convert_textures n64graphics extract_assets)
 
 # skyboxes --------------------------------------------------------------------
 include(convert_skyboxes.cmake)
@@ -1598,8 +1600,6 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
     list(APPEND LINKED_ELFS ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_BIN} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o)
     list(APPEND ELF_FILES ${OUTPUT_ELF})
 endmacro()
-add_custom_target(link_elfs DEPENDS ${LINKED_ELFS})
-add_dependencies(link_elfs mio0)
 
 # bin/*.c ---------------------------------------------------------------------
 file(GLOB_RECURSE BIN_SOURCE_FILES "${CMAKE_SOURCE_DIR}/bin/*.c")
@@ -1745,6 +1745,8 @@ foreach(SOURCE_FILE_TO_ELF ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
     get_filename_component(OUTPUT_FILENAME "${SOURCE_FILE}" NAME_WLE)
     mio_file(${SOURCE_FILE} "${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf" ${TTEXT})
 endforeach()
+add_custom_target(link_elfs DEPENDS ${LINKED_ELFS})
+add_dependencies(link_elfs mio0 convert_textures convert_cakes preprocess_debug_text.inc.c)
 
 # add executable --------------------------------------------------------------
 set(SM64_ELF ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.elf)
