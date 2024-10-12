@@ -21,17 +21,11 @@ macro(convert_cake INPUT_FILE OUTPUT_FILE)
     list(APPEND CONVERTED_CAKES ${OUTPUT_FILE})
 endmacro()
 
-set(CAKE_DIRECTORIES
-    levels/ending
-)
-
-foreach(CAKE_DIRECTORY ${CAKE_DIRECTORIES})
-    file(GLOB PNG_FILES "${CAKE_DIRECTORY}/*.png")
-    foreach(PNG_FILE ${PNG_FILES})
-        get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
-        get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
-        string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
-        convert_cake(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/levels/ending/${OUTPUT_FILENAME}.inc.c")
-    endforeach()
+include(cake_pngs_${ROM_VERSION}.cmake)
+foreach(PNG_FILE ${CAKE_PNGS})
+    get_filename_component(OUTPUT_DIR "${PNG_FILE}" DIRECTORY)
+    get_filename_component(OUTPUT_FILENAME "${PNG_FILE}" NAME_WLE)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+    convert_cake(${PNG_FILE} "${ABSOLUTE_BUILD_DIR}/levels/ending/${OUTPUT_FILENAME}.inc.c")
 endforeach()
 add_custom_target(convert_cakes DEPENDS ${CONVERTED_CAKES})

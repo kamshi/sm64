@@ -55,3 +55,4 @@ add_custom_command(
     COMMENT "Converting sounds"
 )
 add_custom_target(convert_sequences ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sound/bank_sets.inc.c)
+add_dependencies(convert_sequences extract_assets assemble_sound_player)
