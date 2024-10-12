@@ -1746,7 +1746,7 @@ foreach(SOURCE_FILE_TO_ELF ${SKYBOX_SOURCE_FILES_TO_ELF_FILES})
     mio_file(${SOURCE_FILE} "${OUTPUT_DIR}/${OUTPUT_FILENAME}.elf" ${TTEXT})
 endforeach()
 add_custom_target(link_elfs DEPENDS ${LINKED_ELFS})
-add_dependencies(link_elfs mio0 convert_textures convert_cakes preprocess_debug_text.inc.c)
+add_dependencies(link_elfs mio0 convert_textures convert_cakes convert_skyboxes preprocess_debug_text.inc.c)
 
 # add executable --------------------------------------------------------------
 set(SM64_ELF ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.elf)
