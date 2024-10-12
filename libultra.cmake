@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-add_custom_target(assemble_libultra)
 set(LIBULTRA_OBJECT_FILES)
 macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
@@ -45,10 +44,7 @@ macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
         DEPENDS ${INPUT_FILE}
         COMMENT "Assembling file ${INPUT_FILE}"
     )
-    string(REPLACE "/" "_" TARGET_NAME "assemble${INPUT_FILE}")
-    add_custom_target(${TARGET_NAME} ALL DEPENDS ${OUTPUT_FILE})
     list(APPEND LIBULTRA_OBJECT_FILES ${OUTPUT_FILE})
-    add_dependencies(assemble_libultra ${TARGET_NAME})
 endmacro()
 
 # IMPORTANT: the order here matters for the linking stage
@@ -91,6 +87,7 @@ foreach(ASSEMBLY_FILE ${LIB_ASSEMBLY_FILES})
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
     assemble_libultra_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
+add_custom_target(assemble_libultra DEPENDS ${LIBULTRA_OBJECT_FILES})
 
 # IMPORTANT: the order here matters for the linking stage
 set(LIBULTRA_SOURCE_FILES
@@ -207,11 +204,12 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
     set(OBJECT_FILE ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(ABS_OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
     set(DEPENDENCY_FILE ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
 
     # Add a custom command to compile the source file
     add_custom_command(
-        OUTPUT ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o
+        OUTPUT ${ABS_OBJECT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
         COMMAND gcc
             -fsyntax-only -fsigned-char -fno-builtin -nostdinc
@@ -250,9 +248,7 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
     )
 
     # Append the object file to the list of object files
-    list(APPEND LIBULTRA_OBJECT_FILES ${OBJECT_FILE})
-    string(REPLACE "/" "_" TARGET_NAME "elf_${RELATIVE_PATH}/${FILE_NAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    list(APPEND LIBULTRA_OBJECT_FILES ${ABS_OBJECT_FILE})
 endforeach()
 
 set(RELATIVE_LIBULTRA_OBJECT_FILES)

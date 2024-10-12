@@ -108,8 +108,6 @@ foreach(SOURCE_FILE ${GODDARD_SOURCES})
 
     # Append the object file to the list of object files
     list(APPEND GODDARD_OBJECT_FILES ${OBJECT_FILE})
-    string(REPLACE "/" "_" TARGET_NAME "elf_${RELATIVE_PATH}/${FILE_NAME}")
-    add_custom_target(${TARGET_NAME} DEPENDS ${OBJECT_FILE})
 endforeach()
 
 set(RELATIVE_GODDARD_OBJECT_FILES)
