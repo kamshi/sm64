@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 if("${ROM_VERSION}" STREQUAL "jp")
-    include(actors_jp.cmake)
+    include(assets_jp.cmake)
 
     add_custom_command(
         OUTPUT ${ASSETS_JP}
@@ -12,7 +12,7 @@ if("${ROM_VERSION}" STREQUAL "jp")
     )
     add_custom_target(extract_assets DEPENDS ${ASSETS_JP})
 elseif("${ROM_VERSION}" STREQUAL "eu")
-    include(actors_eu.cmake)
+    include(assets_eu.cmake)
 
     add_custom_command(
         OUTPUT ${ASSETS_EU}
@@ -23,7 +23,7 @@ elseif("${ROM_VERSION}" STREQUAL "eu")
     )
     add_custom_target(extract_assets DEPENDS ${ASSETS_EU})
 elseif("${ROM_VERSION}" STREQUAL "us")
-    include(actors_us.cmake)
+    include(assets_us.cmake)
 
     add_custom_command(
         OUTPUT ${ASSETS_US}

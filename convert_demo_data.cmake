@@ -36,3 +36,4 @@ add_custom_command(
     COMMENT "Running Python script ${CMAKE_SOURCE_DIR}/tools/demo_data_converter.py..."
 )
 add_custom_target(convert_demo_data ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/assets/demo_data.o)
+add_dependencies(convert_demo_data extract_assets)

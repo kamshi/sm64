@@ -205,6 +205,43 @@ add_custom_command(
 add_custom_target(generate_text_menu_strings ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/include/text_menu_strings.h)
 
 # run assembler ---------------------------------------------------------------
+set(ARMIPS_FILES)
+macro(armips_file INPUT_FILE)
+    get_filename_component(INPUT_FILENAME ${INPUT_FILE} NAME_WE)
+    get_filename_component(INPUT_DIR ${INPUT_FILE} DIRECTORY)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${INPUT_DIR}")
+
+    add_custom_command(
+        OUTPUT ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
+        COMMAND ${CMAKE_SOURCE_DIR}/tools/armips
+        -sym ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin.sym
+        # TODO
+        -definelabel ${ROM_VERSION_STRING} 1
+        -definelabel F3D_OLD 1
+        -definelabel NON_MATCHING 1
+        -definelabel AVOID_UB 1
+        -definelabel _FINALROM 1
+        -strequ CODE_FILE
+        ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin
+        -strequ DATA_FILE
+        ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}_data.bin
+        ${INPUT_FILE}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+        DEPENDS armips ${INPUT_FILE}
+        COMMENT "Assembling file ${INPUT_FILE}"
+    )
+
+    list(APPEND ARMIPS_FILES ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin)
+endmacro()
+
+file(GLOB RSP_ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/rsp/*.s")
+foreach(ASSEMBLY_FILE ${RSP_ASSEMBLY_FILES})
+    armips_file(${ASSEMBLY_FILE})
+endforeach()
+add_custom_target(armips_files DEPENDS ${ARMIPS_FILES})
+
+
 set(ASSEMBLED_FILES)
 macro(assemble_file INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
@@ -255,7 +292,7 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
 endmacro()
 
 file(GLOB ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/asm/*.s")
-list(APPEND ASSEMBLY_FILES lib/rsp.s) # TODO: depends on armips_files
+list(APPEND ASSEMBLY_FILES lib/rsp.s)
 foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     get_filename_component(OUTPUT_DIR "${ASSEMBLY_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${ASSEMBLY_FILE}" NAME_WLE)
@@ -263,44 +300,9 @@ foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     assemble_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
 add_custom_target(assemble_files DEPENDS ${ASSEMBLED_FILES})
+add_dependencies(assemble_files armips_files)
 
 include(libultra.cmake)
-
-set(ARMIPS_FILES)
-macro(armips_file INPUT_FILE)
-    get_filename_component(INPUT_FILENAME ${INPUT_FILE} NAME_WE)
-    get_filename_component(INPUT_DIR ${INPUT_FILE} DIRECTORY)
-    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${INPUT_DIR}")
-
-    add_custom_command(
-        OUTPUT ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/
-        COMMAND ${CMAKE_SOURCE_DIR}/tools/armips
-        -sym ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin.sym
-        # TODO
-        -definelabel ${ROM_VERSION_STRING} 1
-        -definelabel F3D_OLD 1
-        -definelabel NON_MATCHING 1
-        -definelabel AVOID_UB 1
-        -definelabel _FINALROM 1
-        -strequ CODE_FILE
-        ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin
-        -strequ DATA_FILE
-        ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}_data.bin
-        ${INPUT_FILE}
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        DEPENDS armips ${INPUT_FILE}
-        COMMENT "Assembling file ${INPUT_FILE}"
-    )
-
-    list(APPEND ARMIPS_FILES ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin)
-endmacro()
-
-file(GLOB RSP_ASSEMBLY_FILES "${CMAKE_SOURCE_DIR}/rsp/*.s")
-foreach(ASSEMBLY_FILE ${RSP_ASSEMBLY_FILES})
-    armips_file(${ASSEMBLY_FILE})
-endforeach()
-add_custom_target(armips_files DEPENDS ${ARMIPS_FILES})
 
 # convert animations ----------------------------------------------------------
 include(convert_mario_animations.cmake)
@@ -1487,7 +1489,12 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
     list(APPEND ELF_TARGETS ${OBJECT_FILE})
 endforeach()
 add_custom_target(elf_target DEPENDS ${ELF_TARGETS})
-add_dependencies(elf_target generate_text_strings generate_text_menu_strings generate_level_headers)
+add_dependencies(elf_target
+    generate_text_strings
+    generate_text_menu_strings
+    generate_level_headers
+    convert_cakes
+)
 
 set(LINKED_ELFS)
 macro(mio_file INPUT_FILE OUTPUT_FILE TTEXT)
@@ -1800,6 +1807,7 @@ add_custom_command(
     COMMENT "Building sm64.${ROM_VERSION}.elf"
 )
 add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})
+add_dependencies(sm64_elf elf_target link_elfs)
 
 add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.bin

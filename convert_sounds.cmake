@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
 add_custom_command(
-    OUTPUT ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl.inc.c
+    OUTPUT
+        ${ABSOLUTE_BUILD_DIR}/sound/sound_data.tbl
+        ${ABSOLUTE_BUILD_DIR}/sound/sound_data.tbl.inc.c
+        ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl.inc.c
+        ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl
     COMMAND ${CMAKE_COMMAND} -E make_directory ${ABSOLUTE_BUILD_DIR}/sound/
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/tools/assemble_sound.py
         ${RELATIVE_BUILD_DIR}/sound/samples/
@@ -21,4 +25,10 @@ add_custom_command(
     DEPENDS ${ABSOLUTE_BUILD_DIR}/endian-and-bitwidth ${CMAKE_SOURCE_DIR}/tools/assemble_sound.py
     COMMENT "Converting sounds"
 )
-add_custom_target(convert_sounds ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl.inc.c)
+add_custom_target(convert_sounds ALL DEPENDS
+    ${ABSOLUTE_BUILD_DIR}/sound/sound_data.tbl
+    ${ABSOLUTE_BUILD_DIR}/sound/sound_data.tbl.inc.c
+    ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl.inc.c
+    ${ABSOLUTE_BUILD_DIR}/sound/sound_data.ctl
+)
+add_dependencies(convert_sounds encode_sounds)

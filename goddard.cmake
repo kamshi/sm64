@@ -131,3 +131,4 @@ add_custom_command(
 )
 
 add_custom_target(goddard ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/libgoddard.a)
+add_dependencies(goddard convert_textures)
