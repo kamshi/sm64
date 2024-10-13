@@ -44,3 +44,4 @@ foreach(SOUND_FILE ${SOUND_AIFFS})
 endforeach()
 
 add_custom_target(encode_sounds DEPENDS ${ENCODED_SOUNDS})
+add_dependencies(encode_sounds extract_assets)

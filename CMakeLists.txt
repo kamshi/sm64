@@ -302,7 +302,7 @@ foreach(ASSEMBLY_FILE ${ASSEMBLY_FILES})
     assemble_file(${ASSEMBLY_FILE} "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o")
 endforeach()
 add_custom_target(assemble_files DEPENDS ${ASSEMBLED_FILES})
-add_dependencies(assemble_files armips_files)
+add_dependencies(assemble_files convert_textures armips_files)
 
 include(libultra.cmake)
 
@@ -1467,7 +1467,11 @@ add_dependencies(elf_target
     generate_text_strings
     generate_text_menu_strings
     generate_level_headers
+    convert_textures
     convert_cakes
+    convert_skyboxes
+    convert_sounds
+    convert_sequences
 )
 
 set(LINKED_ELFS)
@@ -1798,7 +1802,7 @@ add_custom_command(
     COMMENT "Building sm64.${ROM_VERSION}.elf"
 )
 add_custom_target(sm64_elf ALL DEPENDS ${SM64_ELF})
-add_dependencies(sm64_elf elf_target link_elfs)
+add_dependencies(sm64_elf convert_mario_animations convert_demo_data elf_target link_elfs)
 
 add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.bin
@@ -1810,6 +1814,7 @@ add_custom_command(
     COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
 )
 add_custom_target(sm64_bin ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.bin)
+add_dependencies(sm64_bin sm64_elf)
 
 add_custom_command(
     OUTPUT ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.z64
@@ -1820,3 +1825,4 @@ add_custom_command(
     COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
 )
 add_custom_target(sm64 ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.z64)
+add_dependencies(sm64 sm64_bin)
