@@ -211,6 +211,7 @@ set(ARMIPS_FILES)
 macro(armips_file INPUT_FILE)
     get_filename_component(INPUT_FILENAME ${INPUT_FILE} NAME_WE)
     get_filename_component(INPUT_DIR ${INPUT_FILE} DIRECTORY)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${INPUT_DIR}")
 
     add_custom_command(
@@ -231,7 +232,7 @@ macro(armips_file INPUT_FILE)
         ${INPUT_FILE}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS armips ${INPUT_FILE}
-        COMMENT "Assembling file ${INPUT_FILE}"
+        COMMENT "Assembling file ${RELATIVE_INPUT_FILE}"
     )
 
     list(APPEND ARMIPS_FILES ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${INPUT_FILENAME}.bin)
@@ -248,6 +249,7 @@ set(ASSEMBLED_FILES)
 macro(assemble_file INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
@@ -287,7 +289,7 @@ macro(assemble_file INPUT_FILE OUTPUT_FILE)
                 ${OUTPUT_FILE}.temp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${INPUT_FILE}
-        COMMENT "Assembling file ${INPUT_FILE}"
+        COMMENT "Assembling file ${RELATIVE_INPUT_FILE}"
     )
     
     list(APPEND ASSEMBLED_FILES ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME})
@@ -355,13 +357,13 @@ add_custom_command(
             -MD ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.d
             -o ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.o
             ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.temp
-    COMMAND ${CMAKE_OBJCOPY} # TODO: use variable
+    COMMAND ${CMAKE_OBJCOPY}
         -j .rodata
         ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.o
         -O binary
         ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.m64
     DEPENDS ${CMAKE_SOURCE_DIR}/sound/sequences/00_sound_player.s
-    COMMENT "Assembling: sound/sequences/00_sound_player.s -> ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.m64"
+    COMMENT "Assembling: sound/sequences/00_sound_player.s -> ${RELATIVE_BUILD_DIR}/sound/sequences/00_sound_player.m64"
 )
 add_custom_target(assemble_sound_player ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sound/sequences/00_sound_player.m64)
 
@@ -372,6 +374,8 @@ set(CONVERTED_TEXTURES)
 macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_OUTPUT_FILE "${OUTPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
@@ -382,9 +386,7 @@ macro(convert_texture_ia1 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f ia1
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+        COMMENT "Converting texture: ${RELATIVE_INPUT_FILE} -> ${RELATIVE_OUTPUT_FILE}.inc.c"
     )
     
     list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
@@ -393,6 +395,8 @@ endmacro()
 macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_OUTPUT_FILE "${OUTPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
@@ -403,9 +407,7 @@ macro(convert_crash_texture_ia1 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f ia1
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+        COMMENT "Converting texture: ${RELATIVE_INPUT_FILE} -> ${RELATIVE_OUTPUT_FILE}.inc.c"
     )
 
     list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
@@ -414,6 +416,8 @@ endmacro()
 macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_OUTPUT_FILE "${OUTPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
@@ -424,9 +428,7 @@ macro(convert_texture_ia1_raw INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}
                 -g ${INPUT_FILE}
                 -f ia1
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}"
+        COMMENT "Converting texture: ${RELATIVE_INPUT_FILE} -> ${RELATIVE_OUTPUT_FILE}"
     )
 
     list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE})
@@ -435,6 +437,8 @@ endmacro()
 macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_OUTPUT_FILE "${OUTPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
@@ -445,9 +449,7 @@ macro(convert_texture_ia4 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f ia4
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+        COMMENT "Converting texture: ${RELATIVE_INPUT_FILE} -> ${RELATIVE_OUTPUT_FILE}.inc.c"
     )
 
     list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
@@ -456,14 +458,15 @@ endmacro()
 macro(convert_texture_ia8 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_OUTPUT_FILE "${OUTPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
+
     add_custom_command(
         OUTPUT ${OUTPUT_FILE}.inc.c
         COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIR}
         COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64graphics -s u8 -i ${OUTPUT_FILE}.inc.c -g ${INPUT_FILE} -f ia8
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+        COMMENT "Converting texture: ${RELATIVE_INPUT_FILE} -> ${RELATIVE_OUTPUT_FILE}.inc.c"
     )
     
     list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
@@ -472,6 +475,8 @@ endmacro()
 macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_OUTPUT_FILE "${OUTPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
@@ -482,9 +487,7 @@ macro(convert_texture_ia16 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f ia16
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+        COMMENT "Converting texture: ${RELATIVE_INPUT_FILE} -> ${RELATIVE_OUTPUT_FILE}.inc.c"
     )
 
     list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
@@ -493,6 +496,8 @@ endmacro()
 macro(convert_texture_rgba16 INPUT_FILE OUTPUT_FILE)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_OUTPUT_FILE "${OUTPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     add_custom_command(
@@ -503,9 +508,7 @@ macro(convert_texture_rgba16 INPUT_FILE OUTPUT_FILE)
                 -i ${OUTPUT_FILE}.inc.c
                 -g ${INPUT_FILE}
                 -f rgba16
-        #DEPENDS ${INPUT_FILE}
-        #DEPENDS extract_assets
-        COMMENT "Converting texture: ${INPUT_FILE} -> ${OUTPUT_FILE}.inc.c"
+        COMMENT "Converting texture: ${RELATIVE_INPUT_FILE} -> ${RELATIVE_OUTPUT_FILE}.inc.c"
     )
 
     list(APPEND CONVERTED_TEXTURES ${OUTPUT_FILE}.inc.c)
@@ -1413,9 +1416,11 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
     # Get the filename without extension
     get_filename_component(FILE_NAME ${SOURCE_FILE} NAME_WE)
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_SOURCE_FILE "${SOURCE_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
     set(OBJECT_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
+    set(RELATIVE_OBJECT_FILE ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
     set(DEPENDENCY_FILE ${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.d)
 
     # Add a custom command to compile the source file
@@ -1455,7 +1460,7 @@ foreach(SOURCE_FILE ${SM64_SOURCES})
             ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${SOURCE_FILE}
-        COMMENT "Compiling ${CMAKE_SOURCE_DIR}/${SOURCE_FILE} -> ${OBJECT_FILE}"
+        COMMENT "Compiling ${RELATIVE_SOURCE_FILE} -> ${RELATIVE_OBJECT_FILE}"
     )
 
     # Append the object file to the list of object files
@@ -1479,6 +1484,7 @@ macro(mio_file_with_dependency INPUT_FILE OUTPUT_FILE TTEXT DEPENDENCY)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
 
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     set(ABS_OBJECT_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
@@ -1533,7 +1539,7 @@ macro(mio_file_with_dependency INPUT_FILE OUTPUT_FILE TTEXT DEPENDENCY)
             COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS ${INPUT_FILE} ${DEPENDENCY}
-            COMMENT "Compiling and linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+            COMMENT "Compiling and linking to create ELF file: ${RELATIVE_INPUT_FILE} -> ${OUTPUT_ELF}"
         )
         list(APPEND LINKED_ELFS ${ABS_OBJECT_FILE} ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o)
     else()
@@ -1555,7 +1561,7 @@ macro(mio_file_with_dependency INPUT_FILE OUTPUT_FILE TTEXT DEPENDENCY)
             COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS ${INPUT_FILE} ${DEPENDENCY}
-            COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+            COMMENT "Linking to create ELF file: ${RELATIVE_INPUT_FILE} -> ${OUTPUT_ELF}"
         )
         list(APPEND LINKED_ELFS ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o)
     endif()
@@ -1570,6 +1576,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME_WLE)
 
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
 
     set(ABS_OBJECT_FILE ${CMAKE_SOURCE_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.o)
@@ -1603,7 +1610,7 @@ macro(mio_leveldata INPUT_FILE OUTPUT_FILE SYMBOLS_ELF)
         COMMAND ${CMAKE_LINKER} -r -b binary ${OUTPUT_MIO0} -o ${OUTPUT_MIO0}.o
         DEPENDS ${OBJECT_FILE}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+        COMMENT "Linking to create ELF file: ${RELATIVE_INPUT_FILE} -> ${OUTPUT_ELF}"
     )
     list(APPEND LINKED_ELFS ${ABS_OUTPUT_ELF}.map ${ABS_OUTPUT_ELF} ${ABS_OUTPUT_BIN} ${ABS_OUTPUT_MIO0} ${ABS_OUTPUT_MIO0}.o)
     list(APPEND ELF_FILES ${OUTPUT_ELF})
@@ -1811,7 +1818,7 @@ add_custom_command(
     COMMAND ${CMAKE_OBJCOPY} --pad-to=0x800000 --gap-fill=0xFF ${RELATIVE_SM64_ELF} ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.bin -O binary
     DEPENDS ${SM64_ELF}
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+    COMMENT "Creating binary from elf: ${RELATIVE_SM64_ELF} -> ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.bin"
 )
 add_custom_target(sm64_bin ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.bin)
 add_dependencies(sm64_bin sm64_elf)
@@ -1822,7 +1829,7 @@ add_custom_command(
     COMMAND ${CMAKE_SOURCE_DIR}/tools/sm64tools/n64cksum ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.bin ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.z64
     DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.bin n64cksum
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    COMMENT "Linking to create ELF file: ${INPUT_FILE} -> ${OUTPUT_ELF}"
+    COMMENT "Creating ROM from binary: ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.bin -> ${RELATIVE_BUILD_DIR}/sm64.${ROM_VERSION}.z64"
 )
 add_custom_target(sm64 ALL DEPENDS ${ABSOLUTE_BUILD_DIR}/sm64.${ROM_VERSION}.z64)
 add_dependencies(sm64 sm64_bin)

@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 set(ENCODED_SOUNDS)
 macro(encode_sound INPUT_FILE)
     get_filename_component(OUTPUT_DIR "${INPUT_FILE}" DIRECTORY)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${OUTPUT_DIR}")
     get_filename_component(OUTPUT_FILENAME "${INPUT_FILE}" NAME_WLE)
     string(REPLACE "#" "_sharp_" MODIFIED_FILENAME "${OUTPUT_FILENAME}")
@@ -15,7 +16,7 @@ macro(encode_sound INPUT_FILE)
             COMMAND ${CMAKE_SOURCE_DIR}/tools/vadpcm_enc -c ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.table ${INPUT_FILE} ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS aiff_extract_codebook vadpcm_enc
-            COMMENT "Encoding sound ${INPUT_FILE} -> ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
+            COMMENT "Encoding sound ${RELATIVE_INPUT_FILE} -> ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
         )
     else()
         # hack: cmake output can't contain #, so we generate an additional file not containing the #
@@ -28,7 +29,7 @@ macro(encode_sound INPUT_FILE)
             COMMAND ${CMAKE_COMMAND} -E copy "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc" "${ABSOLUTE_BUILD_DIR}/${RELATIVE_PATH}/${OUTPUT_FILENAME}.aifc"
             WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
             DEPENDS aiff_extract_codebook vadpcm_enc
-            COMMENT "Encoding sound ${INPUT_FILE} -> ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
+            COMMENT "Encoding sound ${RELATIVE_INPUT_FILE} -> ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${MODIFIED_FILENAME}.aifc"
         )
     endif()
 

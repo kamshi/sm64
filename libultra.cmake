@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 set(LIBULTRA_OBJECT_FILES)
 macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_INPUT_FILE "${INPUT_FILE}")
     get_filename_component(OUTPUT_DIR "${OUTPUT_FILE}" DIRECTORY)
     get_filename_component(OUTPUT_FILENAME "${OUTPUT_FILE}" NAME)
 
@@ -42,7 +43,7 @@ macro(assemble_libultra_file INPUT_FILE OUTPUT_FILE)
                 ${OUTPUT_FILE}.temp
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${INPUT_FILE}
-        COMMENT "Assembling file ${INPUT_FILE}"
+        COMMENT "Assembling file ${RELATIVE_INPUT_FILE}"
     )
     list(APPEND LIBULTRA_OBJECT_FILES ${OUTPUT_FILE})
 endmacro()
@@ -201,6 +202,7 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
     # Get the filename without extension
     get_filename_component(FILE_NAME ${SOURCE_FILE} NAME_WE)
     get_filename_component(SOURCE_DIR "${SOURCE_FILE}" DIRECTORY)
+    string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_SOURCE_FILE "${SOURCE_FILE}")
     string(REPLACE "${CMAKE_SOURCE_DIR}/" "" RELATIVE_PATH "${SOURCE_DIR}")
     # Set the object file name
     set(OBJECT_FILE ${RELATIVE_BUILD_DIR}/${RELATIVE_PATH}/${FILE_NAME}.o)
@@ -244,7 +246,7 @@ foreach(SOURCE_FILE ${LIBULTRA_SOURCE_FILES})
             ${CMAKE_SOURCE_DIR}/${SOURCE_FILE}
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         DEPENDS ${SOURCE_FILE}
-        COMMENT "Compiling ${CMAKE_SOURCE_DIR}/${SOURCE_FILE} -> ${OBJECT_FILE}"
+        COMMENT "Compiling ${RELATIVE_SOURCE_FILE} -> ${OBJECT_FILE}"
     )
 
     # Append the object file to the list of object files
